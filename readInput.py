@@ -104,12 +104,16 @@ def decodeR(funct3, funct7):
             operation = 'add'
         elif (funct7 == '0100000'):
             operation = 'sub'
+        elif (funct7 == '0000001'):
+            operation = 'mul'
     elif (funct3 == '001' and funct7 == '0000000'):
         operation = 'sll'
     elif (funct3 == '010' and funct7 == '0000000'):
         operation = 'slt'
     elif (funct3 == '100' and funct7 == '0000000'):
         operation = 'xor'
+    elif (funct3 == '100' and funct7 == '0000001'):
+        operation = 'div'
     elif (funct3 == '101'):
         if (funct7 == '0000000'):
             operation = 'srl'
@@ -117,6 +121,8 @@ def decodeR(funct3, funct7):
             operation = 'sra'
     elif (funct3 == '110' and funct7 == '0000000'):
         operation = 'or'
+    elif (funct3 == '110' and funct7 == '0000001'):
+        operation = 'rem'
     elif (funct3 == '111' and funct7 == '0000000'):
         operation = 'and'
     return operation
@@ -183,7 +189,8 @@ def fetch(pc):  # pc is of type string 0x0
 
 def decode(instr):
     # 0xFFFFFFFF type of input
-    bin_instr = bin(int(instr, 16))[2:]
+    #bin_instr = bin(int(instr, 16))[2:]
+    bin_instr = "{0:032b}".format(int(instr,16))
 
     opcode = bin_instr[0:7]
 
