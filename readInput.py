@@ -36,63 +36,63 @@ def reset_all():
 
 def extractR(instr):  # instruction is of type string, for ex, 0x00011101
     bin_instr = bin(int(instr, 16))[2:].zfill(32)
-    opcode = bin_instr[0:7]
-    rd = bin_instr[7:12]
-    funct3 = bin_instr[12:15]
-    rs1 = bin_instr[15:20]
-    rs2 = bin_instr[20:25]
-    funct7 = bin_instr[25:32]
+    opcode = bin_instr[25:32]
+    rd = bin_instr[20:25]
+    funct3 = bin_instr[17:20]
+    rs1 = bin_instr[12:17]
+    rs2 = bin_instr[7:12]
+    funct7 = bin_instr[0:7]
     return [opcode, rd, funct3, rs1, rs2, funct7]
 
 
 def extractS(instr):  # instruction is of type string, for ex, 0x00011101
     bin_instr = bin(int(instr, 16))[2:].zfill(32)
-    opcode = bin_instr[0:7]
-    imm1 = bin_instr[7:12]
-    funct3 = bin_instr[12:15]
-    rs1 = bin_instr[15:20]
-    rs2 = bin_instr[20:25]
-    imm2 = bin_instr[25:32]
+    opcode = bin_instr[25:32]
+    imm1 = bin_instr[20:25]
+    funct3 = bin_instr[17:20]
+    rs1 = bin_instr[12:17]
+    rs2 = bin_instr[7:12]
+    imm2 = bin_instr[0:7]
     imm = imm1+imm2
     return [opcode, funct3, rs1, rs2, imm]
 
 
 def extractI(instr):  # instruction is of type string, for ex, 0x00011101
     bin_instr = bin(int(instr, 16))[2:].zfill(32)
-    opcode = bin_instr[0:7]
-    rd = bin_instr[7:12]
-    funct3 = bin_instr[12:15]
-    rs1 = bin_instr[15:20]
-    imm = bin_instr[20:32]
+    opcode = bin_instr[25:32]
+    rd = bin_instr[20:25]
+    funct3 = bin_instr[17:20]
+    rs1 = bin_instr[12:17]
+    imm = bin_instr[0:12]
 
     return [opcode, rd, funct3, rs1, imm]
 
 
 def extractSB(instr):  # instruction is of type string, for ex, 0x00011101
     bin_instr = bin(int(instr, 16))[2:].zfill(32)
-    opcode = bin_instr[0:7]
-    funct3 = bin_instr[12:15]
-    rs1 = bin_instr[15:20]
-    rs2 = bin_instr[20:25]
-    imm = bin_instr[8:12]+bin_instr[25:31]+bin_instr[7]+bin_instr[31]
+    opcode = bin_instr[25:32]
+    funct3 = bin_instr[17:20]
+    rs1 = bin_instr[12:17]
+    rs2 = bin_instr[7:12]
+    imm = bin_instr[20:24]+bin_instr[1:7]+bin_instr[24]+bin_instr[0]
 
     return [opcode, funct3, rs1, rs2, imm]
 
 
 def extractU(instr):  # instruction is of type string, for ex, 0x00011101
     bin_instr = bin(int(instr, 16))[2:].zfill(32)
-    opcode = bin_instr[0:7]
-    rd = bin_instr[7:12]
-    imm = bin_instr[12:32]
+    opcode = bin_instr[25:32]
+    rd = bin_instr[20:25]
+    imm = bin_instr[0:20]
 
     return [opcode, rd, imm]
 
 
 def extractUJ(instr):  # instruction is of type string, for ex, 0x00011101
     bin_instr = bin(int(instr, 16))[2:].zfill(32)
-    opcode = bin_instr[0:7]
-    rd = bin_instr[7:12]
-    imm = bin_instr[21:31]+bin_instr[20]+bin_instr[12:20]+bin_instr[31]
+    opcode = bin_instr[25:32]
+    rd = bin_instr[20:25]
+    imm = bin_instr[1:11]+bin_instr[11]+bin_instr[12:20]+bin_instr[0]
 
     return [opcode, rd, imm]
 
