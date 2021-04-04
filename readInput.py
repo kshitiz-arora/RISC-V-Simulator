@@ -189,36 +189,47 @@ def fetch(pc):  # pc is of type string 0x0
 
 def decode(instr):
     # 0xFFFFFFFF type of input
-    #bin_instr = bin(int(instr, 16))[2:]
     bin_instr = "{0:032b}".format(int(instr,16))
 
     opcode = bin_instr[0:7]
 
     operation = 'error'
 
+    reg_list = []
+
     if(opcode == "0110011"):
         code_list = extractR(instr)
         operation = decodeR(code_list[2], code_list[5])
+        reg_list = [code_list[1], code_list[3], code_list[4]] # rd, rs1, rs2
         
     elif(opcode == "0100011"):
         code_list = extractS(instr)
         operation = decodeS(code_list[1])
+        reg_list = [code_list[2], code_list[3], code_list[4]] # rs1, rs2, immm
 
     elif(opcode == "0000011" or opcode == "0010011" or opcode == "1100111"):
         code_list = extractI(instr)
         operation = decodeI(code_list[0], code_list[2])
+        reg_list = [code_list[1], code_list[3], code_list[4]] # rd, rs1, imm
 
     elif(opcode == "1100011"):
         code_list = extractSB(instr)
         operation = decodeSB(code_list[1])
+        reg_list = [code_list[2], code_list[3], code_list[4]] # rs1, rs2, imm
 
     elif(opcode == "0010111" or opcode == "0110111"):
         code_list = extractU(instr)
         operation = decodeU(code_list[0])
+        reg_list = [code_list[1], code_list[2]] # rd, imm
         
     elif(opcode == "1101111"):
         code_list = extractUJ(instr)
         operation = 'jal'
-    else:
-        return "error"
+        reg_list = [code_list[1], code_list[2]] # rd, imm
+
+    return operation, reg_list
+    
+
+
+# execute
 
