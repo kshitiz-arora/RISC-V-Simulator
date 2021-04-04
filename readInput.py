@@ -1,10 +1,10 @@
 file = open('input.mc', 'r')
 
-input = dict()
+input_list = dict()
 
 for line in file:
     ls = line.split()
-    input[ls[0]] = ls[1]
+    input_list[ls[0]] = ls[1]
 
 registers = dict()
 data_memory = list()
@@ -191,7 +191,7 @@ def decode(instr):
     # 0xFFFFFFFF type of input
     bin_instr = "{0:032b}".format(int(instr,16))
 
-    opcode = bin_instr[0:7]
+    opcode = bin_instr[25:32]
 
     operation = 'error'
 
@@ -230,6 +230,18 @@ def decode(instr):
     return operation, reg_list
     
 
+def get_reg(reg_val):
+    return int('0b'+reg_val, 2)
+
+def get_imm(imm_val):
+    n = len(imm_val)
+    if (imm_val[0] == '0'):
+        return int('0b'+imm_val, 2)
+    else:
+        inv = ''
+        for bit in imm_val:
+            inv += str(1^int(bit))
+        return -1*(int('0b'+inv, 2)+1)
+
 
 # execute
-
