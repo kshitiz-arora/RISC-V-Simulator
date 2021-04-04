@@ -234,7 +234,6 @@ def get_reg(reg_val):
     return int('0b'+reg_val, 2)
 
 def get_imm(imm_val):
-    n = len(imm_val)
     if (imm_val[0] == '0'):
         return int('0b'+imm_val, 2)
     else:
