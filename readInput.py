@@ -228,19 +228,17 @@ def decode(instr):
         reg_list = [code_list[1], code_list[2]] # rd, imm
 
     return operation, reg_list
-    
 
-def get_reg(reg_val):
-    return int('0b'+reg_val, 2)
 
-def get_imm(imm_val):
-    if (imm_val[0] == '0'):
-        return int('0b'+imm_val, 2)
+def get_signed(val):
+    if (val[0] == '0'):
+        return int('0b'+val, 2)
     else:
         inv = ''
-        for bit in imm_val:
+        for bit in val:
             inv += str(1^int(bit))
         return -1*(int('0b'+inv, 2)+1)
 
 
 # execute
+
