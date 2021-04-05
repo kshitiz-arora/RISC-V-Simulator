@@ -238,3 +238,95 @@ def get_signed(val):
         for bit in val:
             inv += str(1^int(bit))
         return -1*(int('0b'+inv, 2)+1)
+
+# execute
+
+def executeR(operation, reg_list):
+    
+    rd= get_signed(reg_list[0])
+    rs1= get_signed(reg_list[1])
+    rs2= get_signed(reg_list[2])
+
+    if (operation=='add'):
+        registers[rd]= registers[rs1] + registers[rs2]
+
+    elif (operation=='and'):
+        registers[rd]= registers[rs1] & registers[rs2]
+    
+    elif (operation=='or'):
+        registers[rd]= registers[rs1] | registers[rs2]
+    
+    elif (operation=='sll'):
+        registers[rd]= registers[rs1] << registers[rs2]
+
+    elif (operation=='slt'):
+        if(registers[rs1]<registers[rs2]):
+            registers[rd]= 1
+        else:
+            registers[rd]=0
+    
+    elif (operation=='sra'): #arithmetic shift right
+        registers[rd] = registers[rs1] >> registers[rs2]
+
+    elif (operation=='srl'): #logical shift right
+        registers[rd]= registers[rs1] >> registers[rs2]
+
+    elif (operation=='sub'):
+        registers[rd]= registers[rs1] - registers[rs2]
+
+    elif (operation=='xor'):
+        registers[rd]= registers[rs1] ^ registers[rs2]
+
+    elif (operation=='mul'):
+        registers[rd]= registers[rs1] * registers[rs2]
+
+    elif (operation=='div'):
+        registers[rd]= registers[rs1] // registers[rs2] #floor division?
+
+    elif (operation=='rem'):
+        registers[rd]= registers[rs1] % registers[rs2]
+
+    else:
+        #error
+
+
+def executeU(operation, reg_list):
+
+    rd= get_signed(reg_list[0])
+    imm= get_signed(reg_list[1])
+
+    if(operation=='auipc'):
+        registers[rd]= pc + imm
+
+    elif(operation=='lui'):
+        imm_final= reg_list[1] + '000000000000'
+        imm_int= get_signed(imm_final)
+        registers[rd]= imm_int
+
+    else:
+        #error
+
+
+def executeSB(operation,reg_list): #rs1, rs2, imm
+    if(operation=="beq"):
+        if(reg_list[0]==reg_list[1]):
+            return reg_list[2]
+        else:
+            return -1
+    if(operation=="bne"):
+        if(reg_list[0]!=reg_list[1]):
+            return reg_list[2]
+        else:
+            return -1
+    if(operation=="blt"):
+        if(reg_list[0]<reg_list[1]):
+            return reg_list[2]
+        else:
+            return -1
+    if(operation=="bge"):
+        if(reg_list[0]>=reg_list[1]):
+            return reg_list[2]
+        else:
+            return -1
+
+def executeUJ()
