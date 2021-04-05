@@ -263,7 +263,11 @@ def executeSB(operation,reg_list): #rs1, rs2, imm
         else:
             return -1
 
-def executeUJ()
+def executeUJ(operation,reg_list):
+    return [reg_list[1],reg_list[2],pc+4] #rd, rs1, pc+4
+
+
+
 
 
 
