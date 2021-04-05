@@ -238,6 +238,3 @@ def get_signed(val):
         for bit in val:
             inv += str(1^int(bit))
         return -1*(int('0b'+inv, 2)+1)
-
-
-# execute
