@@ -179,7 +179,6 @@ def decodeU(opcode):
     return operation
 
 
-
 # fetch
 
 def fetch(pc):  # pc is of type string 0x0
@@ -241,4 +240,37 @@ def get_signed(val):
 
 
 # execute
+
+def executeSB(operation,reg_list): #rs1, rs2, imm
+    if(operation=="beq"):
+        if(reg_list[0]==reg_list[1]):
+            return reg_list[2]
+        else:
+            return -1
+    if(operation=="bne"):
+        if(reg_list[0]!=reg_list[1]):
+            return reg_list[2]
+        else:
+            return -1
+    if(operation=="blt"):
+        if(reg_list[0]<reg_list[1]):
+            return reg_list[2]
+        else:
+            return -1
+    if(operation=="bge"):
+        if(reg_list[0]>=reg_list[1]):
+            return reg_list[2]
+        else:
+            return -1
+
+def executeUJ()
+
+
+
+
+
+
+
+
+
 
