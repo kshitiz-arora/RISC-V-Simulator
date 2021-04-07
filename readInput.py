@@ -6,30 +6,33 @@ for line in file:
     ls = line.split()
     input_list[ls[0]] = ls[1]
 
+PC = 0x0
 registers = dict()
-data_memory = list()
-stack_memory = list()
-heap_memory = list()
+data_memory = dict()
+stack_memory = dict()
+heap_memory = dict()
 
 
 def reset_all():
 
-    registers = {i: 0x00000000 for i in range(32)}
+    PC = 0x0
 
-    registers[2] = 0x7FFFFFF0  # stack pointer
-    registers[3] = 0x10000000  # global pointer
+    registers = {i: '0x00000000' for i in range(32)}
+
+    registers[2] = '0x7FFFFFF0'  # stack pointer
+    registers[3] = '0x10000000'  # global pointer
 
     data_size = 1000
     # to be addressed starting from 0x10000000
-    data_memory = list('00000000' for _ in range(data_size))
+    data_memory = {(0x10000000+(4*i)):'00000000' for i in range(data_size)}
 
     stack_size = 1000
     # to be addressed starting from 0x7FFFFFFC
-    stack_memory = list('00000000' for _ in range(stack_size))
+    stack_memory = {(0x7FFFFFFC+(4*i)):'00000000' for i in range(stack_size)}
 
     heap_size = 1000
     # to be addressed starting from 0x10007FE8
-    heap_memory = list('00000000' for _ in range(heap_size))
+    heap_memory = {(0x10007FE8+(4*i)):'00000000' for i in range(heap_size)}
 
     return
 
@@ -179,10 +182,14 @@ def decodeU(opcode):
     return operation
 
 
+
 # fetch
 
-def fetch(pc):  # pc is of type string 0x0
-    return input[pc]
+def fetch(PC):  # PC is of type string 0x0
+    
+    PC += 4
+    
+    return input_list[hex(PC-4)]
 
 # decode
 
@@ -193,43 +200,53 @@ def decode(instr):
     opcode = bin_instr[25:32]
 
     operation = 'error'
+    oper_type = 'error'
 
     reg_list = []
 
     if(opcode == "0110011"):
+        oper_type = 'R'
         code_list = extractR(instr)
         operation = decodeR(code_list[2], code_list[5])
         reg_list = [code_list[1], code_list[3], code_list[4]] # rd, rs1, rs2
-        
+
     elif(opcode == "0100011"):
+        oper_type = 'S'
         code_list = extractS(instr)
         operation = decodeS(code_list[1])
         reg_list = [code_list[2], code_list[3], code_list[4]] # rs1, rs2, immm
 
     elif(opcode == "0000011" or opcode == "0010011" or opcode == "1100111"):
+        oper_type = 'I'
         code_list = extractI(instr)
         operation = decodeI(code_list[0], code_list[2])
         reg_list = [code_list[1], code_list[3], code_list[4]] # rd, rs1, imm
 
     elif(opcode == "1100011"):
+        oper_type = 'SB'
         code_list = extractSB(instr)
         operation = decodeSB(code_list[1])
         reg_list = [code_list[2], code_list[3], code_list[4]] # rs1, rs2, imm
 
     elif(opcode == "0010111" or opcode == "0110111"):
+        oper_type = 'U'
         code_list = extractU(instr)
         operation = decodeU(code_list[0])
         reg_list = [code_list[1], code_list[2]] # rd, imm
-        
+
     elif(opcode == "1101111"):
+        oper_type = 'UJ'
         code_list = extractUJ(instr)
         operation = 'jal'
         reg_list = [code_list[1], code_list[2]] # rd, imm
 
-    return operation, reg_list
+    return oper_type, operation, reg_list
 
 
-def get_signed(val):
+def get_signed(value):
+    val = value
+    if (value[:2] == '0b'):
+        val = value[2:]
     if (val[0] == '0'):
         return int('0b'+val, 2)
     else:
@@ -241,36 +258,215 @@ def get_signed(val):
 
 # execute
 
+def executeR(operation, reg_list):
+
+    rd= get_signed(reg_list[0])
+    rs1= get_signed(reg_list[1])
+    rs2= get_signed(reg_list[2])
+
+    val = 0
+
+    if (operation=='add'):
+        val= registers[rs1] + registers[rs2]
+
+    elif (operation=='and'):
+        val= registers[rs1] & registers[rs2]
+
+    elif (operation=='or'):
+        val= registers[rs1] | registers[rs2]
+
+    elif (operation=='sll'):
+        val= registers[rs1] << registers[rs2]
+
+    elif (operation=='slt'):
+        if(registers[rs1]<registers[rs2]):
+            val= 1
+        else:
+            val=0
+
+    elif (operation=='sra'): #arithmetic shift right
+        val = registers[rs1] >> registers[rs2]
+
+    elif (operation=='srl'): #logical shift right
+        val= registers[rs1] >> registers[rs2]
+
+    elif (operation=='sub'):
+        val= registers[rs1] - registers[rs2]
+
+    elif (operation=='xor'):
+        val= registers[rs1] ^ registers[rs2]
+
+    elif (operation=='mul'):
+        val= registers[rs1] * registers[rs2]
+
+    elif (operation=='div'):
+        val= registers[rs1] // registers[rs2] #floor division?
+
+    elif (operation=='rem'):
+        val= registers[rs1] % registers[rs2]
+
+    return val
+
+
+def executeU(operation, reg_list): # rd imm
+
+    rd= get_signed(reg_list[0])
+    imm= get_signed(reg_list[1])
+
+    if(operation=='auipc'):
+        val= PC + imm
+
+    elif(operation=='lui'):
+        imm_final= reg_list[1] + '000000000000'
+        imm_int= get_signed(imm_final)
+        val= imm_int
+
+    return val
+
 def executeSB(operation,reg_list): #rs1, rs2, imm
+
+    [rs1, rs2, imm] = [get_signed(i) for i in reg_list]
+
     if(operation=="beq"):
-        if(reg_list[0]==reg_list[1]):
-            return reg_list[2]
-        else:
-            return -1
+        if(rs1==rs2):
+            return imm+PC
+
     if(operation=="bne"):
-        if(reg_list[0]!=reg_list[1]):
-            return reg_list[2]
-        else:
-            return -1
+        if(rs1!=rs2):
+            return imm+PC
+
     if(operation=="blt"):
-        if(reg_list[0]<reg_list[1]):
-            return reg_list[2]
-        else:
-            return -1
+        if(rs1<rs2):
+            return imm+PC
+
     if(operation=="bge"):
-        if(reg_list[0]>=reg_list[1]):
-            return reg_list[2]
-        else:
-            return -1
+        if(rs1>=rs2):
+            return imm+PC
 
-def executeUJ()
+    return PC
 
-
-
-
+def executeUJ(operation,reg_list): # rd imm
+    [rd, imm] = [get_signed(i) for i in reg_list]
+    return [PC+imm, PC+4]
 
 
 
+def executeI(operation, reg_list): # rd rs1 imm
+    # rd = get_signed(reg_list[0])
+    # rs1 = get_signed(reg_list[1])
+    # imm = get_signed(reg_list[2])
+    [rd, rs1, imm] = [get_signed(i) for i in reg_list]
+    ans = 0
+    if (operation == 'addi'):
+        ans = get_signed(registers[rs1]) + imm
+    elif (operation == 'andi'):
+        ans = get_signed(registers[rs1]) & imm
+    elif (operation == 'ori'):
+        ans = get_signed(registers[rs1]) | imm
+    elif (operation in ['lb', 'lh', 'lw', 'jalr']):
+        ans = get_signed(registers[rs1]) + imm # calculating address
+    return ans
+
+def executeS(operation, reg_list): # rs1 rs2 imm
+    [rs1, rs2, imm] = [get_signed(i) for i in reg_list]
+    ans = get_signed(registers[rs1]) + imm
+    return ans
+
+def execute(oper_type, operation, reg_list):
+    var = 0
+    if (oper_type == 'R'):
+        var = executeR(operation, reg_list) # returns value to be stored in rd
+    elif (oper_type == 'S'):
+        var = executeS(operation, reg_list) # returns effective address imm(rs1) whose value is to be stored in rs2
+    elif (oper_type == 'I'):
+        var = executeI(operation, reg_list) # returns value to be stored in rd or effective address imm(rs1)
+    elif (oper_type == 'SB'):
+        var = executeSB(operation, reg_list) # return PC temp
+    elif (oper_type == 'U'):
+        var = executeU(operation, reg_list) # returns required value
+    elif (oper_type == 'UJ'):
+        var = executeUJ(operation, reg_list) # returns PC temp and return address of jump instruction %list%
+    return var
 
 
 
+# memory access 
+
+def memoryAccess(oper_type, operation, reg_list, var):
+    memread = 0
+    # (oper_type == 'R') NO ACTION
+    if (oper_type == 'S'):
+        if (operation == 'sb'):
+            data_memory[var] = data_memory[var][:6] + registers[get_signed(reg_list[1])][-2:]
+        elif (operation == 'sh'):
+            data_memory[var] = data_memory[var][:4] + registers[get_signed(reg_list[1])][-4:]
+        elif (operation == 'sw'):
+            data_memory[var] = registers[get_signed(reg_list[1])][-8:]
+    elif (oper_type == 'I'): # registers[get_signed(reg_list[0])]
+        if (operation == 'lb'):
+            memread = '0x' + data_memory[var][-2:].zfill(8)
+        elif (operation == 'lh'):
+            memread = '0x' + data_memory[var][-4:].zfill(8)
+        elif (operation == 'lw'):
+            memread = '0x' + data_memory[var][-8:].zfill(8)
+        elif (operation == 'jalr'):
+            # memread = '0x' + hex(PC+4)[2:].zfill(8)
+            PC = var
+        # others NO ACTION
+    elif (oper_type == 'SB'):
+        PC = var
+    # elif (oper_type == 'U'):
+    #     memread = '0x' + hex(var)[2:].zfill(8)
+    elif (oper_type == 'UJ'):
+        # memread = '0x' + hex(PC+4)[2:].zfill(8)
+        PC = var
+
+    return memread
+
+# register update
+
+def int_to_signed(val):
+    if (val < 0):
+        return hex(val+(1<<32))
+    return '0x'+hex(val)[2:].zfill(8)
+
+def registerUpdate(oper_type, operation, reg_list, var, memread):
+
+    if (oper_type == 'R'):
+        registers[get_signed(reg_list[0])] = int_to_signed(var)
+    # (oper_type == 'S') NO ACTION
+    elif (oper_type == 'I'):
+        if (operation == 'jalr'):
+            registers[get_signed(reg_list[0])] = '0x' + hex(PC+4)[2:].zfill(8)
+        elif (operation in ['lb', 'lh', 'lw']):
+            registers[get_signed(reg_list[0])] = memread
+        elif (operation in ['andi', 'ori', 'addi']):
+            registers[get_signed(reg_list[0])] = int_to_signed(var)
+    # (oper_type == 'SB') NO ACTION
+    elif (oper_type == 'U'):
+        registers[get_signed(reg_list[0])] = '0x' + hex(var)[2:].zfill(8)
+    elif (oper_type == 'UJ'):
+        registers[get_signed(reg_list[0])] = '0x' + hex(PC+4)[2:].zfill(8)
+
+    return
+
+
+# main function
+
+def main():
+    reset_all()
+    while (1):
+        instr = fetch(PC)
+        if(instr=="text_end" ):
+            print("end of code")
+            break
+        oper_type, operation, reg_list = decode(instr)
+        if(operation=="error"):
+            print("error in machine code")
+            continue
+        var = execute(oper_type, operation, reg_list)
+        memread = memoryAccess(oper_type, operation, reg_list, var)
+        registerUpdate(oper_type, operation, reg_list, var, memread)
+    return
+
+main()
