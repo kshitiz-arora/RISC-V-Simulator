@@ -15,10 +15,17 @@ heap_memory = dict()
 
 def reset_all():
 
+    global PC
+    global registers 
+    global data_memory
+    global stack_memory
+    global heap_memory
+    
     PC = 0x0
 
+    
     registers = {i: '0x00000000' for i in range(32)}
-
+    
     registers[2] = '0x7FFFFFF0'  # stack pointer
     registers[3] = '0x10000000'  # global pointer
 
@@ -393,6 +400,9 @@ def execute(oper_type, operation, reg_list):
 # memory access 
 
 def memoryAccess(oper_type, operation, reg_list, var):
+    global PC
+    global data_memory
+    
     memread = 0
     # (oper_type == 'R') NO ACTION
     if (oper_type == 'S'):
@@ -426,12 +436,14 @@ def memoryAccess(oper_type, operation, reg_list, var):
 # register update
 
 def int_to_signed(val):
+    print(val)
     if (val < 0):
         return hex(val+(1<<32))
     return '0x'+hex(val)[2:].zfill(8)
 
 def registerUpdate(oper_type, operation, reg_list, var, memread):
-
+    global registers
+    
     if (oper_type == 'R'):
         registers[get_signed(reg_list[0])] = int_to_signed(var)
     # (oper_type == 'S') NO ACTION
@@ -455,6 +467,8 @@ def registerUpdate(oper_type, operation, reg_list, var, memread):
 
 def main():
     reset_all()
+   
+    
     while (1):
         instr = fetch(PC)
         if(instr=="text_end" ):
@@ -464,6 +478,7 @@ def main():
         if(operation=="error"):
             print("error in machine code")
             continue
+    
         var = execute(oper_type, operation, reg_list)
         memread = memoryAccess(oper_type, operation, reg_list, var)
         registerUpdate(oper_type, operation, reg_list, var, memread)
