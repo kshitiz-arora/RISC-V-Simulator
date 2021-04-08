@@ -293,6 +293,8 @@ def decode(instr):
 
 def get_signed(value):
     val = value
+    if (len(val) == 5): # registers
+        return int('0b'+val, 2)
     if (value[:2] == '0b'):
         val = value[2:].zfill(32)
     if (value[:2] == '0x'):
@@ -536,7 +538,7 @@ def registerUpdate(oper_type, operation, reg_list, var, memread):
 
 def main():
     reset_all()
-    readfile('inp.mc')   
+    readfile('inp2.mc')   
     
     while (1):
         instr = fetch()
