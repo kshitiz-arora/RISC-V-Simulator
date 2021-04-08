@@ -376,14 +376,16 @@ def executeR(operation, reg_list):
 def executeU(operation, reg_list): # rd imm
 
     rd= get_signed(reg_list[0])
-    imm= get_signed(reg_list[1])
+    # imm= get_signed(reg_list[1]) ----------------------------U type dont use signed
+    imm = int('0b'+reg_list[1], 2)
 
     if(operation=='auipc'):
         val= PC + imm - 4
 
     elif(operation=='lui'):
-        imm_final= reg_list[1] + '000000000000'
-        imm_int= get_signed(imm_final)
+        # imm_final= reg_list[1] # + '000000000000'
+        # imm_int= get_signed(imm_final)
+        imm_int = int('0b'+reg_list[1], 2)
         val= imm_int
 
     return val
@@ -457,6 +459,14 @@ def execute(oper_type, operation, reg_list):
 
 # memory access 
 
+def sign_extend_hex(s): # '12031312' returns '210481200'
+    sign = '0'
+    num = int('0x'+s[0],16)
+    if (num > 7):
+        sign = 'f'
+    ne = 8-len(s)
+    return (sign*ne)+s
+
 def memoryAccess(oper_type, operation, reg_list, var):
     global PC
     global data_memory
@@ -472,11 +482,11 @@ def memoryAccess(oper_type, operation, reg_list, var):
             data_memory[var] = registers[get_signed(reg_list[1])][-8:]
     elif (oper_type == 'I'): # registers[get_signed(reg_list[0])]
         if (operation == 'lb'):
-            memread = '0x' + data_memory.get(var,'00000000')[-2:].zfill(8)
+            memread = '0x' + sign_extend_hex(data_memory.get(var,'00000000')[-2:])
         elif (operation == 'lh'):
-            memread = '0x' + data_memory.get(var,'00000000')[-4:].zfill(8)
+            memread = '0x' + sign_extend_hex(data_memory.get(var,'00000000')[-4:])
         elif (operation == 'lw'):
-            memread = '0x' + data_memory.get(var,'00000000')[-8:].zfill(8)
+            memread = '0x' + sign_extend_hex(data_memory.get(var,'00000000')[-8:])
         elif (operation == 'jalr'):
             # memread = '0x' + hex(PC+4)[2:].zfill(8)
             PC = var
@@ -526,7 +536,7 @@ def registerUpdate(oper_type, operation, reg_list, var, memread):
 
 def main():
     reset_all()
-    readfile('inp.mc.txt')   
+    readfile('inp.mc')   
     
     while (1):
         instr = fetch()
