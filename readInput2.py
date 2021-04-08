@@ -63,19 +63,25 @@ def readfile(filename): # assuming input.mc has instructions > data > stack > he
         a, b = line.split()
         if (b == 'data_end'):
             break
-        data_memory[int(a,16)] = b[2:]
+        if (b[:2] == '0x'):
+            b = b[2:]
+        data_memory[int(a,16)] = b
 
     for line in file:
         a, b = line.split()
         if (b == 'stack_end'):
             break
-        data_memory[int(a,16)] = b[2:]
+        if (b[:2] == '0x'):
+            b = b[2:]
+        data_memory[int(a,16)] = b
 
     for line in file:
         a, b = line.split()
         if (b == 'heap_end'):
             break
-        data_memory[int(a,16)] = b[2:]
+        if (b[:2] == '0x'):
+            b = b[2:]
+        data_memory[int(a,16)] = b
 
     return
     
@@ -131,7 +137,7 @@ def extractU(instr):  # instruction is of type string, for ex, 0x00011101
     bin_instr = bin(int(instr, 16))[2:].zfill(32)
     opcode = bin_instr[25:32]
     rd = bin_instr[20:25]
-    imm = bin_instr[0:20]
+    imm = bin_instr[0:20]+'0'*12
 
     return [opcode, rd, imm]
 
@@ -376,14 +382,16 @@ def executeR(operation, reg_list):
 def executeU(operation, reg_list): # rd imm
 
     rd= get_signed(reg_list[0])
-    imm= get_signed(reg_list[1])
+    # imm= get_signed(reg_list[1]) ----------------------------U type dont use signed
+    imm = int('0b'+reg_list[1], 2)
 
     if(operation=='auipc'):
-        val= PC + imm
+        val= PC + imm - 4
 
     elif(operation=='lui'):
-        imm_final= reg_list[1] + '000000000000'
-        imm_int= get_signed(imm_final)
+        # imm_final= reg_list[1] # + '000000000000'
+        # imm_int= get_signed(imm_final)
+        imm_int = int('0b'+reg_list[1], 2)
         val= imm_int
 
     return val
@@ -391,10 +399,10 @@ def executeU(operation, reg_list): # rd imm
 def executeSB(operation,reg_list): #rs1, rs2, imm
 
     [rs1, rs2, imm] = [get_signed(i) for i in reg_list]
-
+    
     op1 = get_signed(registers[rs1])
     op2 = get_signed(registers[rs2])
-
+    # print(registers[rs1],registers[rs2],op1,op2,"=======================")
     if(operation=="beq"):
         if(op1==op2):
             return imm+PC-4
@@ -457,6 +465,14 @@ def execute(oper_type, operation, reg_list):
 
 # memory access 
 
+def sign_extend_hex(s): # '12031312' returns '210481200'
+    sign = '0'
+    num = int('0x'+s[0],16)
+    if (num > 7):
+        sign = 'F'
+    ne = 8-len(s)
+    return (sign*ne)+s
+
 def memoryAccess(oper_type, operation, reg_list, var):
     global PC
     global data_memory
@@ -465,18 +481,18 @@ def memoryAccess(oper_type, operation, reg_list, var):
     # (oper_type == 'R') NO ACTION
     if (oper_type == 'S'):
         if (operation == 'sb'):
-            data_memory[var] = data_memory[var][:6] + registers[get_signed(reg_list[1])][-2:]
+            data_memory[var] = data_memory.get(var,'00000000')[:6] + registers[get_signed(reg_list[1])][-2:]
         elif (operation == 'sh'):
-            data_memory[var] = data_memory[var][:4] + registers[get_signed(reg_list[1])][-4:]
+            data_memory[var] = data_memory.get(var,'00000000')[:4] + registers[get_signed(reg_list[1])][-4:]
         elif (operation == 'sw'):
             data_memory[var] = registers[get_signed(reg_list[1])][-8:]
     elif (oper_type == 'I'): # registers[get_signed(reg_list[0])]
         if (operation == 'lb'):
-            memread = '0x' + data_memory[var][-2:].zfill(8)
+            memread = '0x' + sign_extend_hex(data_memory.get(var,'00000000')[-2:])
         elif (operation == 'lh'):
-            memread = '0x' + data_memory[var][-4:].zfill(8)
+            memread = '0x' + sign_extend_hex(data_memory.get(var,'00000000')[-4:])
         elif (operation == 'lw'):
-            memread = '0x' + data_memory[var][-8:].zfill(8)
+            memread = '0x' + sign_extend_hex(data_memory.get(var,'00000000')[-8:])
         elif (operation == 'jalr'):
             # memread = '0x' + hex(PC+4)[2:].zfill(8)
             PC = var
@@ -526,7 +542,7 @@ def registerUpdate(oper_type, operation, reg_list, var, memread):
 
 def main():
     reset_all()
-    readfile('input_fib11.mc')   
+    readfile('inp2.mc')   
     
     while (1):
         instr = fetch()
