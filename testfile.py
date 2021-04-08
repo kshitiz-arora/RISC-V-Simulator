@@ -1,2 +1,0 @@
-from readInput import *
-

@@ -11,6 +11,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
         super().__init__()
         self.inst_count = len(temp3.instructions)
         self.inst_num = 1
+        self.clock_count = 0
         
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
@@ -67,7 +68,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
         self.Simulator.setAlignment(QtCore.Qt.AlignCenter)
         self.Simulator.setObjectName("Simulator")
         self.simulatorTable = QtWidgets.QTableWidget(self.Simulator)
-        self.simulatorTable.setGeometry(QtCore.QRect(20, 110, 631, 841))
+        self.simulatorTable.setGeometry(QtCore.QRect(10, 110, 639, 841))
         
         palette = QtGui.QPalette()
         brush = QtGui.QBrush(QtGui.QColor(0, 170, 0))
@@ -622,7 +623,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
         self.listWidget = QtWidgets.QListWidget(self.Simulator)
         self.listWidget.setGeometry(QtCore.QRect(1050, 110, 400, 500))
         font = QtGui.QFont()
-        font.setFamily("Arial")
+        font.setFamily("Sitka Small")
         font.setPointSize(10)
         self.listWidget.setWordWrap(True)
         self.listWidget.setFont(font)
@@ -630,7 +631,16 @@ class Ui_MainWindow(QtWidgets.QWidget):
         item = QtWidgets.QListWidgetItem()
         self.listWidget.addItem(item)
         
-        self.exitBtn.clicked.connect(QCoreApplication.instance().quit) # For exiting
+        # Label for clock count
+        self.clockLabel = QtWidgets.QLabel(self.Simulator)
+        self.clockLabel.setGeometry(QtCore.QRect(1060, 710, 390, 50))
+        font = QtGui.QFont()
+        font.setFamily("Sitka")
+        font.setPointSize(16)
+        self.clockLabel.setFont(font)
+        self.clockLabel.setObjectName("clockLabel")
+        self.clockLabel.setStyleSheet('QLabel {background-color: #000000; color: #00aa00; border:3px solid green;}')
+        
         
         self.simulatorTable.selectRow(0) # Highlighting the very first instruction
         
@@ -640,6 +650,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
         
         self.stepBtn.clicked.connect(self.step_clicked) #call step clicked
+        self.exitBtn.clicked.connect(self.run_clicked) # Run clicked
 #-----------------------------------------------------------------------------------------------
 
     def retranslateUi(self, MainWindow):
@@ -903,20 +914,24 @@ class Ui_MainWindow(QtWidgets.QWidget):
             self.registerTable.setItem(i, 1, QTableWidgetItem(str(0)))
             
         self.stepBtn.setText(_translate("MainWindow", "Step"))
-        self.exitBtn.setText(_translate("MainWindow", "Exit"))
+        self.exitBtn.setText(_translate("MainWindow", "Run"))
         
         # For list widget
         __sortingEnabled = self.listWidget.isSortingEnabled()
         self.listWidget.setSortingEnabled(False)
         item = self.listWidget.item(0)
-        item.setText(_translate("MainWindow", "Hello my name is karan and I am not a terrorist. I sometimes kill a couple of people but I\'m not a murderer"))
+        item.setText(_translate("MainWindow", ""))
         self.listWidget.setSortingEnabled(__sortingEnabled)
+        
+        # For clock count
+        self.clockLabel.setText(_translate("MainWindow", "Clock Cycle Count = 0"))
         
         
     def step_clicked(self): # Function for self button
         if self.inst_num < self.inst_count: #Only do things if there are instructions left
             temp3.main() # Run the main function
-            self.listWidget.clear()
+            self.clock_count += 1 #increment clock cycle
+            self.listWidget.clear() # clear the list widget
             self.simulatorTable.selectRow(self.inst_num) # To highlight the current instruction
             # Update the registers
             for i in range(31):
@@ -934,12 +949,52 @@ class Ui_MainWindow(QtWidgets.QWidget):
             for i in range(1000):
                 self.heapMem.setItem(i, 1, QTableWidgetItem(str(temp3.memory[int((0x10007FE8+(4*i)))])))
             
+            # To display the messages
+            for el in temp3.message:
+                item = QListWidgetItem(str(el))
+                self.listWidget.addItem(item)
             
-            self.inst_num = (temp3.PC) // 4
+            # Display clock count
+            self.clockLabel.setText("Clock Cycle Count = " + str(self.clock_count))
+                
+            self.inst_num = (temp3.PC) // 4 # update pc
         else:
-            print("you are done")
+            return
+    
+    def run_clicked(self):
+        while self.inst_num < self.inst_count - 1:
+            temp3.main() # Run the main
+            self.clock_count += 1 #increment clock cycle
+            self.inst_num = (temp3.PC) // 4 # update pc
+            
+        self.listWidget.clear() # clear the list widget
         
+        # Update the registers
+        for i in range(31):
+            self.registerTable.setItem(i, 1, QTableWidgetItem(str(temp3.registers[i+1])))
         
+        # Update the data memory
+        for i in range(1000):
+            self.dataMem.setItem(i, 1, QTableWidgetItem(str(temp3.memory[int((0x10000000+(4*i)))])))
+        
+        # Updating the stack memory
+        for i in range(1000):
+            self.stackMem.setItem(i, 1, QTableWidgetItem(str(temp3.memory[int((0x7FFFFFFC-(4*i)))])))
+            
+        # Updating the heap memory
+        for i in range(1000):
+            self.heapMem.setItem(i, 1, QTableWidgetItem(str(temp3.memory[int((0x10007FE8+(4*i)))])))
+        
+        # To display the messages
+        for el in temp3.message:
+            item = QListWidgetItem(str(el))
+            self.listWidget.addItem(item)
+        
+        # Display clock count
+        self.clockLabel.setText("Clock Cycle Count = " + str(self.clock_count))
+        
+        # Highlight the last one
+        self.simulatorTable.selectRow(self.inst_num)
         
     def radioButton(self):
         self.regButton = QtWidgets.QRadioButton(self.Simulator)
