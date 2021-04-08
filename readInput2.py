@@ -63,19 +63,25 @@ def readfile(filename): # assuming input.mc has instructions > data > stack > he
         a, b = line.split()
         if (b == 'data_end'):
             break
-        data_memory[int(a,16)] = b[2:]
+        if (b[:2] == '0x'):
+            b = b[2:]
+        data_memory[int(a,16)] = b
 
     for line in file:
         a, b = line.split()
         if (b == 'stack_end'):
             break
-        data_memory[int(a,16)] = b[2:]
+        if (b[:2] == '0x'):
+            b = b[2:]
+        data_memory[int(a,16)] = b
 
     for line in file:
         a, b = line.split()
         if (b == 'heap_end'):
             break
-        data_memory[int(a,16)] = b[2:]
+        if (b[:2] == '0x'):
+            b = b[2:]
+        data_memory[int(a,16)] = b
 
     return
     
@@ -465,7 +471,7 @@ def sign_extend_hex(s): # '12031312' returns '210481200'
     sign = '0'
     num = int('0x'+s[0],16)
     if (num > 7):
-        sign = 'f'
+        sign = 'F'
     ne = 8-len(s)
     return (sign*ne)+s
 
