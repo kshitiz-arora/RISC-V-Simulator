@@ -1033,8 +1033,8 @@ class Ui_MainWindow(QtWidgets.QWidget):
             else:
                 self.dataMem.setVisible(True)
                 self.registerTable.setVisible(False)
-                self.heapMem.setVisible(False)
-                self.stackMem.setVisible(False)      
+                #self.heapMem.setVisible(False)
+                #self.stackMem.setVisible(False)      
 
 
 
