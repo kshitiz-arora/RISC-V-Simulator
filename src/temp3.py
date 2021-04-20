@@ -6,6 +6,11 @@ registers = dict()
 memory = dict()
 variable = dict()
 message = ['' for _ in range(5)]
+#queues for buffers 
+fetch_buffer= []
+decode_buffer= []
+execute_buffer= []
+memory_buffer= []
 
 
 def reset_all():
@@ -14,8 +19,17 @@ def reset_all():
     global registers
     global memory
     global variable
+    global fetch_buffer
+    global decode_buffer
+    global execute_buffer
+    global memory_buffer
 
     PC = 0x0
+
+    decode_buffer= []
+    execute_buffer= []
+    fetch_buffer= []
+    memory_buffer= []
 
     registers = {i: '0x00000000' for i in range(32)}
 
@@ -261,10 +275,13 @@ def decodeU():  # opcode):
 def fetch():  # PC is of type string 0x0
     global message
     global PC_temp
+    global fetch_buffer
 
     PC_temp = PC + 4
     message[0] = "FETCH:           \nPC_temp -> " + hex(PC+4) + "    \nFetched instruction - " + instructions[PC]
-    return instructions[PC]  # string or int
+    
+    fetch_buffer.append(instructions[PC]) ##now adding it to queue instead of returning
+    ##return instructions[PC]  # string or int
 
 
 # decode
@@ -276,6 +293,7 @@ def get_reg_val(name):
 
 def decode(instr):
     global message
+    global decode_buffer
     bin_instr = "{0:032b}".format(int(instr, 16))
 
     opcode = bin_instr[25:32]
@@ -325,7 +343,9 @@ def decode(instr):
     variable['operation'] = operation
 
     message[1] = "\nDECODE:          \nIntruction Type - " + instr_type + "    \nOperation - " + operation + "    \nRegister values are read."
-    return reg_list
+    
+    decode_buffer.append(reg_list)
+    ##return reg_list
 
 
 def get_signed(value):
@@ -502,6 +522,7 @@ def execute(reg_list):
     global PC
     global PC_temp
     global message
+    global execute_buffer
     # PC_temp = PC
     instr_type = variable['instr_type']
     var = 0
@@ -522,7 +543,8 @@ def execute(reg_list):
         var = executeUJ(reg_list)
     PC = PC_temp
     message[2] = "\nEXECUTE:         \nPC -> " + hex(PC) + "    \nReturned value - " + str(var)
-    return var
+    execute_buffer.append(var)
+    #return var
 
 
 # memory access
@@ -540,6 +562,7 @@ def memoryAccess(var):
     # global PC
     global memory
     global message
+    global memory_buffer
 
     operation = variable['operation']
     instr_type = variable['instr_type']
@@ -566,7 +589,8 @@ def memoryAccess(var):
     else:
         message[3] = '\nMEMORY ACCESS:   \nNo Action'
 
-    return memread
+    memory_buffer.append(memread)
+    ##return memread
 
 # register update
 
@@ -625,15 +649,24 @@ readfile('inp.txt')
 
 def main():
     
-    instr = fetch()
-    if(instr=="text_end"):
+    ##instr = fetch()
+    fetch()
+    if(fetch_buffer.pop(0)=="text_end"):
         print("end of code")
-    reg_list = decode(instr)
+
+    ##reg_list = decode(fetch_buffer.pop(0))
+    decode(fetch_buffer.pop(0))
+
     if(variable['operation'] == "error"):
         print("error in machine code")
     
-    var = execute(reg_list)
-    memread = memoryAccess(var)
-    registerUpdate(var, memread)
+    ##var = execute(reg_list)
+    execute(decode_buffer.pop(0))
+    ##memread = memoryAccess(var)
+    var = execute_buffer.pop(0)
+    memoryAccess(var)
+
+    ##registerUpdate(var, memread)
+    registerUpdate(var, memory_buffer.pop(0))
     return
 
