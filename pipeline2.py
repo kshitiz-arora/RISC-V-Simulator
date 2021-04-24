@@ -3,6 +3,7 @@ PC_temp = 0x0
 clock = 0
 instructions = dict()
 registers = dict()
+registers_bool = dict()
 memory = dict()
 # variable = dict()
 message = ['' for _ in range(5)]
@@ -31,7 +32,7 @@ def reset_all():
     global decode_buffer
     global execute_buffer
     global memory_buffer
-
+    global registers_bool
     PC = 0x0
 
     decode_buffer= []
@@ -40,7 +41,8 @@ def reset_all():
     memory_buffer= []
 
     registers = {i: '0x00000000' for i in range(32)}
-
+    registers_bool = {i: 0 for i in range(32)}
+    
     registers[2] = '0x7FFFFFF0'  # stack pointer
     registers[3] = '0x10000000'  # global pointer
 
@@ -357,7 +359,9 @@ def decode(instr):
         variable = extractUJ(instr)  # code_list = extractUJ(instr)
         operation = 'jal'
         reg_list = []
-
+    if(variable["rd"]!="" ):
+        registers_bool[int("0x"+variable["rd"],2)]=3
+        
     variable['instr_type'] = instr_type
     variable['operation'] = operation
 
