@@ -5,6 +5,9 @@ instructions = dict()
 registers = dict()
 registers_bool = dict()
 memory = dict()
+# for data forwarding
+data_frwd = 0
+
 # variable = dict()
 message = ['' for _ in range(5)]
 #queues for buffers 
@@ -324,6 +327,8 @@ def decode(instr):
 
     reg_list = []
 
+    
+
     if(opcode == "0110011"):
         instr_type = 'R'
         variable = extractR(instr)
@@ -360,10 +365,27 @@ def decode(instr):
         operation = 'jal'
         reg_list = []
     if(variable["rd"]!="" ):
-        registers_bool[int("0x"+variable["rd"],2)]=3
+        registers_bool[int("0b"+variable["rd"],2)]=3
         
     variable['instr_type'] = instr_type
     variable['operation'] = operation
+
+    #check for data hazard in rs1 and rs2
+    if(data_frwd ==1):
+        # E to E
+        if(variable["rs1"]!="" and  registers_bool[int("0b"+variable["rs1"],2)] ==2):
+            variable["rs1"]= execute_buffer[0][1]["rd"]
+        if(variable["rs2"]!="" and  registers_bool[int("0b"+variable["rs2"],2)] ==2):
+            variable["rs2"]= execute_buffer[0][1]["rd"]
+        # M to E
+        if(variable["rs1"]!="" and registers_bool[int("0b"+variable["rs1"],2)] ==1):
+             variable["rs1"]= memory_buffer[0][2]["rd"]
+        if(variable["rs2"]!="" and registers_bool[int("0b"+variable["rs2"],2)] ==1):
+             variable["rs2"]= memory_buffer[0][2]["rd"]
+
+        # M to M ------------------
+
+
 
     message[1] = "\nDECODE:          \nIntruction Type - " + instr_type + "    \nOperation - " + operation + "    \nRegister values are read."
     
@@ -373,6 +395,8 @@ def decode(instr):
 
 def get_signed(value):
     val = value
+    if(val==""):
+        return 0
     if (len(val) == 5):  # registers
         return int('0b'+val, 2)
     if (value[:2] == '0b'):
@@ -565,6 +589,10 @@ def execute(parameters):
     elif (instr_type == 'UJ'):
         # returns PC temp and return address of jump instruction %list%
         var = executeUJ(reg_list, variable)
+    
+    if(variable["rd"]!="" and registers_bool[int("0b"+variable["rd"],2)]==3):
+        registers_bool[int("0b"+variable["rd"],2)] -= 1
+    
     PC = PC_temp
     message[2] = "\nEXECUTE:         \nPC -> " + hex(PC) + "    \nReturned value - " + str(var)
     execute_buffer.append([var, variable])
@@ -586,12 +614,15 @@ def memoryAccess(parameters):
     [var, variable] = parameters
     # global PC
     global memory
-    global message
+    global messageram
     global memory_buffer
+
+    if(variable["rd"]!="" and registers_bool[int("0b"+variable["rd"],2)]==2):
+        registers_bool[int("0b"+variable["rd"],2)] -= 1
 
     operation = variable['operation']
     instr_type = variable['instr_type']
-    memread = 0
+    memread = ""
     # (instr_type == 'R') NO ACTION
     if (instr_type == 'S'):
         message[3] = '\nMEMORY ACCESS:   \nMemory at ' + hex(var) + ' is updated.'
@@ -637,6 +668,9 @@ def registerUpdate(parameters):
     global registers
     global message
 
+    if(variable["rd"]!="" and registers_bool[int("0b"+variable["rd"],2)]==1):
+        registers_bool[int("0b"+variable["rd"],2)] -= 1
+
     operation = variable['operation']
     instr_type = variable['instr_type']
     reg = get_signed(variable['rd'])
@@ -673,6 +707,10 @@ def registerUpdate(parameters):
 reset_all()
 readfile('test.txt')
 
+def data_forwarding():
+    global data_frwd
+    data_frwd = 1
+
 
 def main1():
     global PC
@@ -682,6 +720,7 @@ def main1():
     global decode_counter
     global fetch_counter
     
+    data_forwarding()
 
     f = 0
 
@@ -701,26 +740,32 @@ def main1():
 
         if (f!=-2):
             f= PC#fetch_buffer.pop(0)
-        
-        if(fetch_counter>=0 ):
-            fetch(fetch_counter)
 
-            #if jump
-            #PC= #new
-        if(decode_counter>=0):
-            decode(fetch_buffer.pop(0))
-        if(execute_counter>=0 ):
-            execute(decode_buffer.pop(0))
-        if(memory_counter>=0 ):
-            memoryAccess(execute_buffer.pop(0))
+        
+        
         if(register_counter>=0 ):
             registerUpdate(memory_buffer.pop(0))
+
+        if(memory_counter>=0 ):
+            memoryAccess(execute_buffer.pop(0))
+
+        if(execute_counter>=0 ):
+            execute(decode_buffer.pop(0))
+
+        if(decode_counter>=0):
+            decode(fetch_buffer.pop(0))
+
+        if(fetch_counter>=0 ):
+            fetch(fetch_counter)
             
         if (register_counter == -2):
             break
         if(execute_counter < 0 ):   ## do only if execute operation is not performed
             PC= PC +4
         
+
+    print(registers)
+    print(memory[0x10000000])
 
 main1()
 
