@@ -291,15 +291,15 @@ def decodeU(variable):  # opcode):
 
 # fetch
 
-def fetch(PC):  # PC is of type string 0x0
+def fetch(P):  # PC is of type string 0x0
     global message
     global PC_temp
     global fetch_buffer
 
-    PC_temp = PC + 4
-    message[0] = "FETCH:           \nPC_temp -> " + hex(PC+4) + "    \nFetched instruction - " + instructions[PC]
+    PC_temp = P + 4
+    message[0] = "FETCH:           \nPC_temp -> " + hex(P+4) + "    \nFetched instruction - " + instructions[P]
     
-    fetch_buffer.append(instructions[PC]) ##now adding it to queue instead of returning
+    fetch_buffer.append(instructions[P]) ##now adding it to queue instead of returning
     ##return instructions[PC]  # string or int
 
 
@@ -678,21 +678,16 @@ def main1():
     global decode_counter
     global fetch_counter
     
-    max_counter = 1000000000000
 
     f = 0
 
     while(1):
         #fetch()
-        if(instructions[f]=="text_end"):
+        print(f)
+        if(f!=-2 and instructions[f]=="text_end"):
             print("end of code")
-            max_counter = f
+            f=-2
             # break
-
-        if (max_counter != f):
-            f= PC#fetch_buffer.pop(0)
-        
-        
 
         register_counter = memory_counter
         memory_counter = execute_counter
@@ -700,23 +695,27 @@ def main1():
         decode_counter = fetch_counter
         fetch_counter = f
 
-        if(fetch_counter>=0 and f < max_counter):
+        if (f!=-2):
+            f= PC#fetch_buffer.pop(0)
+        
+        if(fetch_counter>=0 ):
             fetch(fetch_counter)
 
             #if jump
             #PC= #new
-        if(decode_counter>=0 and decode_counter < max_counter):
+        if(decode_counter>=0):
             decode(fetch_buffer.pop(0))
-        if(execute_counter>=0 and execute_counter < max_counter):
+        if(execute_counter>=0 ):
             execute(decode_buffer.pop(0))
-        if(memory_counter>=0 and memory_counter < max_counter):
+        if(memory_counter>=0 ):
             memoryAccess(execute_buffer.pop(0))
-        if(register_counter>=0 and register_counter < max_counter):
+        if(register_counter>=0 ):
             registerUpdate(memory_buffer.pop(0))
-        if (register_counter >= max_counter):
+            
+        if (register_counter == -2):
             break
-
-        PC= PC +4
+        if(execute_counter < 0 ):   ## do only if execute operation is not performed
+            PC= PC +4
         
 
 main1()
