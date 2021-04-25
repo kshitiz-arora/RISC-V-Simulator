@@ -372,19 +372,30 @@ def decode(instr):
 
     #check for data hazard in rs1 and rs2
     if(data_frwd ==1):
-        # E to E
-        if(variable["rs1"]!="" and  registers_bool[int("0b"+variable["rs1"],2)] ==2):
-            variable["rs1"]= execute_buffer[0][1]["rd"]
-        if(variable["rs2"]!="" and  registers_bool[int("0b"+variable["rs2"],2)] ==2):
-            variable["rs2"]= execute_buffer[0][1]["rd"]
-        # M to E
-        if(variable["rs1"]!="" and registers_bool[int("0b"+variable["rs1"],2)] ==1):
-             variable["rs1"]= memory_buffer[0][2]["rd"]
-        if(variable["rs2"]!="" and registers_bool[int("0b"+variable["rs2"],2)] ==1):
-             variable["rs2"]= memory_buffer[0][2]["rd"]
-
-        # M to M ------------------
-
+        if(variable["rs1"]!=variable["rs2"]):
+            # E to E
+            if(variable["rs1"]!="" and  registers_bool[int("0b"+variable["rs1"],2)] ==2):
+                variable["rs1"]= execute_buffer[0][1]["rd"]
+            if(variable["rs2"]!="" and  registers_bool[int("0b"+variable["rs2"],2)] ==2):
+                variable["rs2"]= execute_buffer[0][1]["rd"]
+            # M to E
+            if(variable["rs1"]!="" and registers_bool[int("0b"+variable["rs1"],2)] ==1):
+                 variable["rs1"]= memory_buffer[0][2]["rd"]
+            if(variable["rs2"]!="" and registers_bool[int("0b"+variable["rs2"],2)] ==1):
+                 variable["rs2"]= memory_buffer[0][2]["rd"]
+    
+            # M to M ------------------
+        else:
+            # E to E
+            if(variable["rs1"]!="" and  registers_bool[int("0b"+variable["rs1"],2)] ==2):
+                variable["rs1"]= execute_buffer[0][1]["rd"]
+                variable["rs2"]= execute_buffer[0][1]["rd"]
+            # M to E
+            if(variable["rs1"]!="" and registers_bool[int("0b"+variable["rs1"],2)] ==1):
+                 variable["rs1"]= memory_buffer[0][2]["rd"]
+                 variable["rs2"]= memory_buffer[0][2]["rd"]
+    
+            # M to M ------------------
 
 
     message[1] = "\nDECODE:          \nIntruction Type - " + instr_type + "    \nOperation - " + operation + "    \nRegister values are read."
