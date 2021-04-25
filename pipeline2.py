@@ -333,25 +333,25 @@ def decode(instr):
         instr_type = 'R'
         variable = extractR(instr)
         operation = decodeR(variable)
-        #reg_list = [get_reg_val(variable['rs1']), get_reg_val(variable['rs2'])]
+        reg_list = [get_reg_val(variable['rs1']), get_reg_val(variable['rs2'])]
 
     elif(opcode == "0100011"):
         instr_type = 'S'
         variable = extractS(instr)
         operation = decodeS(variable)
-       # reg_list = [get_reg_val(variable['rs1'])]
+        reg_list = [get_reg_val(variable['rs1'])]
 
     elif(opcode == "0000011" or opcode == "0010011" or opcode == "1100111"):
         instr_type = 'I'
         variable = extractI(instr)
         operation = decodeI(variable)
-        #reg_list = [get_reg_val(variable['rs1'])]
+        reg_list = [get_reg_val(variable['rs1'])]
 
     elif(opcode == "1100011"):
         instr_type = 'SB'
         variable = extractSB(instr)
         operation = decodeSB(variable)
-       # reg_list = [get_reg_val(variable['rs1']), get_reg_val(variable['rs2'])]
+        reg_list = [get_reg_val(variable['rs1']), get_reg_val(variable['rs2'])]
 
     elif(opcode == "0010111" or opcode == "0110111"):
         instr_type = 'U'
@@ -395,20 +395,52 @@ def decode(instr):
                  variable["rs2"]= memory_buffer[0][2]["rd"]
     
             # M to M ------------------
-    ############################ CHANGED ######################################    
-    if(instr_type=="R"):
-        reg_list = [get_reg_val(variable['rs1']), get_reg_val(variable['rs2'])]
-        ##yaha agr purani instr execute me se just nikli hai to register me execute se aae hui value dalegi na ki already stored value
+        ############################ CHANGED ######################################    
+        ##yaha agr purani instr execute me se just nikli hai to register 
+        #me execute se aae hui value dalegi na ki already stored value
+        if(instr_type=="R" or instr_type=="SB"):
+            if(variable["rs1"]!=variable["rs2"]):
+                # E to E
+                if(registers_bool[int("0b"+variable["rs1"],2)] ==2):
+                    reg_list[0]= execute_buffer[0][0]
+                    
+                if(registers_bool[int("0b"+variable["rs1"],2)] ==2):
+                    reg_list[1]= execute_buffer[0][0]
+                # M to E
+                if(registers_bool[int("0b"+variable["rs1"],2)] ==1):
+                     reg_list[0]= memory_buffer[0][0]
+                     
+                if(registers_bool[int("0b"+variable["rs2"],2)] ==1):
+                     reg_list[1]= memory_buffer[0][0]
         
-    elif(instr_type=="S"):
-        reg_list = [get_reg_val(variable['rs1'])]
-    elif(instr_type=="I"):
-        reg_list = [get_reg_val(variable['rs1'])]
-    elif(instr_type=="SB"):
-        reg_list = [get_reg_val(variable['rs1']), get_reg_val(variable['rs2'])]
+                # M to M ------------------
+            else:
+                # E to E
+                if(registers_bool[int("0b"+variable["rs1"],2)] ==2):
+                    reg_list[0]= execute_buffer[0][0]
+                    reg_list[1]= execute_buffer[0][0]
+                # M to E
+                if(registers_bool[int("0b"+variable["rs1"],2)] ==1):
+                     reg_list[0]= memory_buffer[0][0]
+                     reg_list[1]= memory_buffer[0][0]
+            
+            #reg_list = [get_reg_val(variable['rs1']), get_reg_val(variable['rs2'])]
+            
+            
+       
+        elif(instr_type=="I" or instr_type=="S"):
+            
+            if(registers_bool[int("0b"+variable["rs1"],2)] ==2):
+                    reg_list[0]= execute_buffer[0][0]
+                   
+            # M to E
+            if(variable["rs1"]!="" and registers_bool[int("0b"+variable["rs1"],2)] ==1):
+                 reg_list[0]= memory_buffer[0][0]
+            
         
-    ##############################################################################
-    
+            
+        ##############################################################################
+        
     if(variable["rd"]!="" ):
         registers_bool[int("0b"+variable["rd"],2)]=3
     message[1] = "\nDECODE:          \nIntruction Type - " + instr_type + "    \nOperation - " + operation + "    \nRegister values are read."
@@ -564,6 +596,7 @@ def executeUJ(reg_list, variable):  # rd imm
 
 
 def executeI(reg_list, variable):  # rd rs1 imm
+    
     global PC_temp
     operation = variable['operation']
     op1 = reg_list[0]
