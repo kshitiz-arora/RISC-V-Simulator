@@ -848,7 +848,6 @@ def main():
     ##memread = memoryAccess(var)
     # parameters = execute_buffer.pop(0)
     memoryAccess(execute_buffer.pop(0))
-
     ##registerUpdate(var, memread)
     registerUpdate(memory_buffer.pop(0))
     return
