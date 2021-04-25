@@ -722,12 +722,12 @@ def main1():
     
     data_forwarding()
 
-    f = 0
-
+    f = -4
+    key = 0
     while(1):
         #fetch()
-        print(f)
-        if(f!=-2 and instructions[f]=="text_end"):
+        print(PC)
+        if(f!=-4 and f!=-2 and instructions[f]=="text_end"):
             print("end of code")
             f=-2
             # break
@@ -760,8 +760,12 @@ def main1():
             
         if (register_counter == -2):
             break
-        if(execute_counter < 0 ):   ## do only if execute operation is not performed
+
+        
+        if(execute_counter < 0 and key<3):   ## do only if execute operation is not performed
             PC= PC +4
+            key +=1
+        #print(PC)
         
 
     print(registers)
