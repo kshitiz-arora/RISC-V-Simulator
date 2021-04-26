@@ -25,10 +25,12 @@ RISCV-Simulator
   |
   |- src
       |
-      |- main.py(containing whole code to run on terminal)
-      |- fetch.py(containing the code for fetch step)
-      |- decode.py(containing the code for decode step)
-      |
+      |- main.py(containing whole code to run)
+      |- ph1gui.py(containing the code for gui non pipelined)
+      |- ph2gui.py(containing the code for gui pipelined)
+      |- pipelining.py (implementation of pipelined execution)
+      |- temp3.py (non pipelined implementation)
+      |- test.txt (a test case)
 
   |- doc
       |
