@@ -1,29 +1,12 @@
+
 PC = 0x0
 PC_temp = 0x0
 clock = 0
 instructions = dict()
 registers = dict()
-registers_bool = dict()
 memory = dict()
-# for data forwarding
-data_frwd = 0
-
-# variable = dict()
+variable = dict()
 message = ['' for _ in range(5)]
-#queues for buffers 
-fetch_buffer= []
-decode_buffer= []
-execute_buffer= []
-memory_buffer= []
-BTB = [] # branch target buffer
-
-#counters
-fetch_counter= -1
-decode_counter= -1
-execute_counter= -1
-memory_counter= -1
-register_counter= -1
-
 
 
 def reset_all():
@@ -31,26 +14,12 @@ def reset_all():
     global PC
     global registers
     global memory
-    # global variable
-    global fetch_buffer
-    global decode_buffer
-    global execute_buffer
-    global memory_buffer
-    global registers_bool
-    global BTB
-
-    BTB = {}
+    global variable
 
     PC = 0x0
 
-    decode_buffer= []
-    execute_buffer= []
-    fetch_buffer= []
-    memory_buffer= []
-
     registers = {i: '0x00000000' for i in range(32)}
-    registers_bool = {i: 0 for i in range(32)}
-    
+
     registers[2] = '0x7FFFFFF0'  # stack pointer
     registers[3] = '0x10000000'  # global pointer
 
@@ -121,8 +90,7 @@ def readfile(filename):  # assuming input.mc has instructions > data > stack > h
 
 
 def extractR(instr):  # instruction is of type string, for ex, 0x00011101
-    variable = {'opcode': '', 'funct3': '', 'funct7': '', 'rd': '',
-                'rs1': '', 'rs2': '', 'instr_type': '', 'operation': ''}
+    global variable
     bin_instr = bin(int(instr, 16))[2:].zfill(32)
     variable['opcode'] = bin_instr[25:32]
     variable['rd'] = bin_instr[20:25]
@@ -130,13 +98,11 @@ def extractR(instr):  # instruction is of type string, for ex, 0x00011101
     variable['rs1'] = bin_instr[12:17]
     variable['rs2'] = bin_instr[7:12]
     variable['funct7'] = bin_instr[0:7]
-    return variable # [opcode, rd, funct3, rs1, rs2, funct7]
+    return  # [opcode, rd, funct3, rs1, rs2, funct7]
 
 
 def extractS(instr):  # instruction is of type string, for ex, 0x00011101
-    # global variable
-    variable = {'opcode': '', 'funct3': '', 'funct7': '', 'rd': '',
-                'rs1': '', 'rs2': '', 'instr_type': '', 'operation': ''}
+    global variable
     bin_instr = bin(int(instr, 16))[2:].zfill(32)
     variable['opcode'] = bin_instr[25:32]
     imm1 = bin_instr[20:25]
@@ -145,13 +111,11 @@ def extractS(instr):  # instruction is of type string, for ex, 0x00011101
     variable['rs2'] = bin_instr[7:12]
     imm2 = bin_instr[0:7]
     variable['imm'] = imm2+imm1
-    return variable # [opcode, funct3, rs1, rs2, imm]
+    return  # [opcode, funct3, rs1, rs2, imm]
 
 
 def extractI(instr):  # instruction is of type string, for ex, 0x00011101
-    # global variable
-    variable = {'opcode': '', 'funct3': '', 'funct7': '', 'rd': '',
-                'rs1': '', 'rs2': '', 'instr_type': '', 'operation': ''}
+    global variable
     bin_instr = bin(int(instr, 16))[2:].zfill(32)
     variable['opcode'] = bin_instr[25:32]
     variable['rd'] = bin_instr[20:25]
@@ -159,13 +123,11 @@ def extractI(instr):  # instruction is of type string, for ex, 0x00011101
     variable['rs1'] = bin_instr[12:17]
     variable['imm'] = bin_instr[0:12]
 
-    return variable # [opcode, rd, funct3, rs1, imm]
+    return  # [opcode, rd, funct3, rs1, imm]
 
 
 def extractSB(instr):  # instruction is of type string, for ex, 0x00011101
-    # global variable
-    variable = {'opcode': '', 'funct3': '', 'funct7': '', 'rd': '',
-                'rs1': '', 'rs2': '', 'instr_type': '', 'operation': ''}
+    global variable
     bin_instr = bin(int(instr, 16))[2:].zfill(32)
     variable['opcode'] = bin_instr[25:32]
     variable['funct3'] = bin_instr[17:20]
@@ -175,25 +137,21 @@ def extractSB(instr):  # instruction is of type string, for ex, 0x00011101
     variable['imm'] = bin_instr[0] + bin_instr[7] + \
         bin_instr[1:7] + bin_instr[20:24] + '0'
 
-    return variable # [opcode, funct3, rs1, rs2, imm]
+    return  # [opcode, funct3, rs1, rs2, imm]
 
 
 def extractU(instr):  # instruction is of type string, for ex, 0x00011101
-    # global variable
-    variable = {'opcode': '', 'funct3': '', 'funct7': '', 'rd': '',
-                'rs1': '', 'rs2': '', 'instr_type': '', 'operation': ''}
+    global variable
     bin_instr = bin(int(instr, 16))[2:].zfill(32)
     variable['opcode'] = bin_instr[25:32]
     variable['rd'] = bin_instr[20:25]
     variable['imm'] = bin_instr[0:20]+'0'*12
 
-    return variable # [opcode, rd, imm]
+    return  # [opcode, rd, imm]
 
 
 def extractUJ(instr):  # instruction is of type string, for ex, 0x00011101
-    # global variable
-    variable = {'opcode': '', 'funct3': '', 'funct7': '', 'rd': '',
-                'rs1': '', 'rs2': '', 'instr_type': '', 'operation': ''}
+    global variable
     bin_instr = bin(int(instr, 16))[2:].zfill(32)
     variable['opcode'] = bin_instr[25:32]
     variable['rd'] = bin_instr[20:25]
@@ -201,10 +159,10 @@ def extractUJ(instr):  # instruction is of type string, for ex, 0x00011101
     variable['imm'] = bin_instr[0]+bin_instr[12:20] + \
         bin_instr[11]+bin_instr[1:11]+'0'
 
-    return variable # [opcode, rd, imm]
+    return  # [opcode, rd, imm]
 
 
-def decodeR(variable):  # funct3, funct7):
+def decodeR():  # funct3, funct7):
 
     funct3 = variable['funct3']
     funct7 = variable['funct7']
@@ -239,7 +197,7 @@ def decodeR(variable):  # funct3, funct7):
     return operation
 
 
-def decodeS(variable):  # funct3):
+def decodeS():  # funct3):
     funct3 = variable['funct3']
     operation = 'error'
     if (funct3 == '000'):
@@ -251,7 +209,7 @@ def decodeS(variable):  # funct3):
     return operation
 
 
-def decodeI(variable):  # opcode, funct3):
+def decodeI():  # opcode, funct3):
     opcode = variable['opcode']
     funct3 = variable['funct3']
     operation = 'error'
@@ -275,7 +233,7 @@ def decodeI(variable):  # opcode, funct3):
     return operation
 
 
-def decodeSB(variable):  # funct3):
+def decodeSB():  # funct3):
     funct3 = variable['funct3']
     operation = 'error'
     if(funct3 == "000"):
@@ -289,7 +247,7 @@ def decodeSB(variable):  # funct3):
     return operation
 
 
-def decodeU(variable):  # opcode):
+def decodeU():  # opcode):
     opcode = variable['opcode']
     operation = 'error'
     if(opcode == "0010111"):
@@ -301,28 +259,24 @@ def decodeU(variable):  # opcode):
 
 # fetch
 
-def fetch(P):  # PC is of type string 0x0
+def fetch():  # PC is of type string 0x0
     global message
     global PC_temp
-    global fetch_buffer
 
-    PC_temp = P + 4
-    message[0] = "FETCH:           \nPC_temp -> " + hex(P+4) + "    \nFetched instruction - " + instructions[P]
-    
-    fetch_buffer.append(instructions[P]) ##now adding it to queue instead of returning
-    ##return instructions[PC]  # string or int
+    PC_temp = PC + 4
+    message[0] = "FETCH:           \nPC_temp -> " + hex(PC+4) + "    \nFetched instruction - " + instructions[PC]
+    return instructions[PC]  # string or int
 
 
 # decode
 
 
-def get_reg_val(reg):
-    return get_signed(registers[get_signed(reg)])
+def get_reg_val(name):
+    return get_signed(registers[get_signed(variable[name])])
 
 
 def decode(instr):
     global message
-    global decode_buffer
     bin_instr = "{0:032b}".format(int(instr, 16))
 
     opcode = bin_instr[25:32]
@@ -332,132 +286,52 @@ def decode(instr):
 
     reg_list = []
 
-    
-
     if(opcode == "0110011"):
         instr_type = 'R'
-        variable = extractR(instr)
-        operation = decodeR(variable)
-        reg_list = [get_reg_val(variable['rs1']), get_reg_val(variable['rs2'])]
+        extractR(instr)
+        operation = decodeR()
+        reg_list = [get_reg_val('rs1'), get_reg_val('rs2')]
 
     elif(opcode == "0100011"):
         instr_type = 'S'
-        variable = extractS(instr)
-        operation = decodeS(variable)
-        reg_list = [get_reg_val(variable['rs1'])]
+        extractS(instr)
+        operation = decodeS()
+        reg_list = [get_reg_val('rs1')]
 
     elif(opcode == "0000011" or opcode == "0010011" or opcode == "1100111"):
         instr_type = 'I'
-        variable = extractI(instr)
-        operation = decodeI(variable)
-        reg_list = [get_reg_val(variable['rs1'])]
+        extractI(instr)
+        operation = decodeI()
+        reg_list = [get_reg_val('rs1')]
 
     elif(opcode == "1100011"):
         instr_type = 'SB'
-        variable = extractSB(instr)
-        operation = decodeSB(variable)
-        reg_list = [get_reg_val(variable['rs1']), get_reg_val(variable['rs2'])]
+        extractSB(instr)
+        operation = decodeSB()
+        reg_list = [get_reg_val('rs1'), get_reg_val('rs2')]
 
     elif(opcode == "0010111" or opcode == "0110111"):
         instr_type = 'U'
-        variable = extractU(instr)
-        operation = decodeU(variable)  # code_list[0])
+        extractU(instr)
+        operation = decodeU()  # code_list[0])
         reg_list = []
 
     elif(opcode == "1101111"):
         instr_type = 'UJ'
-        variable = extractUJ(instr)  # code_list = extractUJ(instr)
+        extractUJ(instr)  # code_list = extractUJ(instr)
         operation = 'jal'
         reg_list = []
-    
-        
+
     variable['instr_type'] = instr_type
     variable['operation'] = operation
 
-    #check for data hazard in rs1 and rs2
-    if(data_frwd ==1):
-        if(variable["rs1"]!=variable["rs2"]):
-            # E to E
-            if(variable["rs1"]!="" and  registers_bool[int("0b"+variable["rs1"],2)] ==2):
-                variable["rs1"]= execute_buffer[0][1]["rd"]
-            if(variable["rs2"]!="" and  registers_bool[int("0b"+variable["rs2"],2)] ==2):
-                variable["rs2"]= execute_buffer[0][1]["rd"]
-            # M to E
-            if(variable["rs1"]!="" and registers_bool[int("0b"+variable["rs1"],2)] ==1):
-                 variable["rs1"]= memory_buffer[0][2]["rd"]
-            if(variable["rs2"]!="" and registers_bool[int("0b"+variable["rs2"],2)] ==1):
-                 variable["rs2"]= memory_buffer[0][2]["rd"]
-    
-            # M to M ------------------
-        else:
-            # E to E
-            if(variable["rs1"]!="" and  registers_bool[int("0b"+variable["rs1"],2)] ==2):
-                variable["rs1"]= execute_buffer[0][1]["rd"]
-                variable["rs2"]= execute_buffer[0][1]["rd"]
-            # M to E
-            if(variable["rs1"]!="" and registers_bool[int("0b"+variable["rs1"],2)] ==1):
-                 variable["rs1"]= memory_buffer[0][2]["rd"]
-                 variable["rs2"]= memory_buffer[0][2]["rd"]
-    
-            # M to M ------------------
-        ############################ CHANGED ######################################    
-        ##yaha agr purani instr execute me se just nikli hai to register 
-        #me execute se aae hui value dalegi na ki already stored value
-        if(instr_type=="R" or instr_type=="SB"):
-            if(variable["rs1"]!=variable["rs2"]):
-                # E to E
-                if(registers_bool[int("0b"+variable["rs1"],2)] ==2):
-                    reg_list[0]= execute_buffer[0][0]
-                    
-                if(registers_bool[int("0b"+variable["rs1"],2)] ==2):
-                    reg_list[1]= execute_buffer[0][0]
-                # M to E
-                if(registers_bool[int("0b"+variable["rs1"],2)] ==1):
-                     reg_list[0]= memory_buffer[0][0]
-                     
-                if(registers_bool[int("0b"+variable["rs2"],2)] ==1):
-                     reg_list[1]= memory_buffer[0][0]
-        
-                # M to M ------------------
-            else:
-                # E to E
-                if(registers_bool[int("0b"+variable["rs1"],2)] ==2):
-                    reg_list[0]= execute_buffer[0][0]
-                    reg_list[1]= execute_buffer[0][0]
-                # M to E
-                if(registers_bool[int("0b"+variable["rs1"],2)] ==1):
-                     reg_list[0]= memory_buffer[0][0]
-                     reg_list[1]= memory_buffer[0][0]
-            
-            #reg_list = [get_reg_val(variable['rs1']), get_reg_val(variable['rs2'])]
-            
-            
-       
-        elif(instr_type=="I" or instr_type=="S"):
-            
-            if(registers_bool[int("0b"+variable["rs1"],2)] ==2):
-                    reg_list[0]= execute_buffer[0][0]
-                   
-            # M to E
-            if(variable["rs1"]!="" and registers_bool[int("0b"+variable["rs1"],2)] ==1):
-                 reg_list[0]= memory_buffer[0][0]
-            
-        
-            
-        ##############################################################################
-        
-    if(variable["rd"]!="" ):
-        registers_bool[int("0b"+variable["rd"],2)]=3
     message[1] = "\nDECODE:          \nIntruction Type - " + instr_type + "    \nOperation - " + operation + "    \nRegister values are read."
-    
-    decode_buffer.append([reg_list, variable])
-    ##return reg_list
+    return reg_list
+
 
 
 def get_signed(value):
     val = value
-    if(val==""):
-        return 0
     if (len(val) == 5):  # registers
         return int('0b'+val, 2)
     if (value[:2] == '0b'):
@@ -488,7 +362,7 @@ def shiftRightLogical(n, m):  # shift n right by m bits
 # execute
 
 
-def executeR(reg_list, variable):
+def executeR(reg_list):
 
     operation = variable['operation']
 
@@ -540,7 +414,7 @@ def executeR(reg_list, variable):
     return val
 
 
-def executeU(reg_list, variable):  # rd imm
+def executeU(reg_list):  # rd imm
 
     # --U type dont use signed
 
@@ -558,7 +432,7 @@ def executeU(reg_list, variable):  # rd imm
     return val
 
 
-def executeSB(reg_list, variable):  # rs1, rs2, imm
+def executeSB(reg_list):  # rs1, rs2, imm
     global PC_temp
 
     operation = variable['operation']
@@ -592,7 +466,7 @@ def executeSB(reg_list, variable):  # rs1, rs2, imm
     return PC  # -----
 
 
-def executeUJ(reg_list, variable):  # rd imm
+def executeUJ(reg_list):  # rd imm
     global PC_temp
     # [rd, imm] = [get_signed(i) for i in reg_list]
     imm = get_signed(variable['imm'])
@@ -600,8 +474,7 @@ def executeUJ(reg_list, variable):  # rd imm
     return PC+4
 
 
-def executeI(reg_list, variable):  # rd rs1 imm
-    
+def executeI(reg_list):  # rd rs1 imm
     global PC_temp
     operation = variable['operation']
     op1 = reg_list[0]
@@ -621,44 +494,37 @@ def executeI(reg_list, variable):  # rd rs1 imm
     return ans
 
 
-def executeS(reg_list, variable):  # rs1 rs2 imm
+def executeS(reg_list):  # rs1 rs2 imm
 
     ans = reg_list[0] + get_signed(variable['imm'])
     return ans
 
 
-def execute(parameters):
-    [reg_list, variable] = parameters
+def execute(reg_list):
     global PC
     global PC_temp
     global message
-    global execute_buffer
     # PC_temp = PC
     instr_type = variable['instr_type']
     var = 0
     if (instr_type == 'R'):
-        var = executeR(reg_list, variable)  # returns value to be stored in rd
+        var = executeR(reg_list)  # returns value to be stored in rd
     elif (instr_type == 'S'):
         # returns effective address imm(rs1) whose value is to be stored in rs2
-        var = executeS(reg_list, variable)
+        var = executeS(reg_list)
     elif (instr_type == 'I'):
         # returns value to be stored in rd or effective address imm(rs1)
-        var = executeI(reg_list, variable)
+        var = executeI(reg_list)
     elif (instr_type == 'SB'):
-        var = executeSB(reg_list, variable)  # return PC temp
+        var = executeSB(reg_list)  # return PC temp
     elif (instr_type == 'U'):
-        var = executeU(reg_list, variable)  # returns required value
+        var = executeU(reg_list)  # returns required value
     elif (instr_type == 'UJ'):
         # returns PC temp and return address of jump instruction %list%
-        var = executeUJ(reg_list, variable)
-    
-    if(variable["rd"]!="" and registers_bool[int("0b"+variable["rd"],2)]==3):
-        registers_bool[int("0b"+variable["rd"],2)] -= 1
-    
+        var = executeUJ(reg_list)
     PC = PC_temp
     message[2] = "\nEXECUTE:         \nPC -> " + hex(PC) + "    \nReturned value - " + str(var)
-    execute_buffer.append([var, variable])
-    #return var
+    return var
 
 
 # memory access
@@ -672,19 +538,14 @@ def sign_extend_hex(s):  # '12031312' returns '210481200'
     return (sign*ne)+s
 
 
-def memoryAccess(parameters):
-    [var, variable] = parameters
+def memoryAccess(var):
     # global PC
     global memory
     global message
-    global memory_buffer
-
-    if(variable["rd"]!="" and registers_bool[int("0b"+variable["rd"],2)]==2):
-        registers_bool[int("0b"+variable["rd"],2)] -= 1
 
     operation = variable['operation']
     instr_type = variable['instr_type']
-    memread = ""
+    memread = 0
     # (instr_type == 'R') NO ACTION
     if (instr_type == 'S'):
         message[3] = '\nMEMORY ACCESS:   \nMemory at ' + hex(var) + ' is updated.'
@@ -707,8 +568,7 @@ def memoryAccess(parameters):
     else:
         message[3] = '\nMEMORY ACCESS:   \nNo Action'
 
-    memory_buffer.append([var, memread, variable])
-    ##return memread
+    return memread
 
 # register update
 
@@ -725,13 +585,9 @@ def int_to_signed(val):
     return '0x'+hex(val)[2:].zfill(8)
 
 
-def registerUpdate(parameters):
-    [var, memread, variable] = parameters
+def registerUpdate(var, memread):
     global registers
     global message
-
-    if(variable["rd"]!="" and registers_bool[int("0b"+variable["rd"],2)]==1):
-        registers_bool[int("0b"+variable["rd"],2)] -= 1
 
     operation = variable['operation']
     instr_type = variable['instr_type']
@@ -769,90 +625,17 @@ def registerUpdate(parameters):
 reset_all()
 readfile('test.txt')
 
-def data_forwarding():
-    global data_frwd
-    data_frwd = 1
-
-
-def main1():
-    global PC
-    global register_counter
-    global memory_counter
-    global execute_counter
-    global decode_counter
-    global fetch_counter
-    
-    data_forwarding()
-
-    f = -4
-    key = 0
-    while(1):
-        #fetch()
-        print(PC)
-        if(f!=-4 and f!=-2 and instructions[f]=="text_end"):
-            print("end of code")
-            f=-2
-            # break
-
-        register_counter = memory_counter
-        memory_counter = execute_counter
-        execute_counter = decode_counter
-        decode_counter = fetch_counter
-        fetch_counter = f
-
-        if (f!=-2):
-            f= PC#fetch_buffer.pop(0)
-
-        
-        
-        if(register_counter>=0 ):
-            registerUpdate(memory_buffer.pop(0))
-
-        if(memory_counter>=0 ):
-            memoryAccess(execute_buffer.pop(0))
-
-        if(execute_counter>=0 ):
-            execute(decode_buffer.pop(0))
-
-        if(decode_counter>=0):
-            decode(fetch_buffer.pop(0))
-
-        if(fetch_counter>=0 ):
-            fetch(fetch_counter)
-            
-        if (register_counter == -2):
-            break
-
-        
-        if(execute_counter < 0 and key<3):   ## do only if execute operation is not performed
-            PC= PC +4
-            key +=1
-        #print(PC)
-        
-
-    print(registers)
-    print(memory[0x10000000])
-
-main1()
-
 def main():
     
-    ##instr = fetch()
-    fetch()
-    if(fetch_buffer.pop(0)=="text_end"):
+    instr = fetch()
+    if(instr=="text_end"):
         print("end of code")
-
-    ##reg_list = decode(fetch_buffer.pop(0))
-    decode(fetch_buffer.pop(0))
-
-    # if(variable['operation'] == "error"):
-    #     print("error in machine code")
+    reg_list = decode(instr)
+    if(variable['operation'] == "error"):
+        print("error in machine code")
     
-    ##var = execute(reg_list)
-    execute(decode_buffer.pop(0))
-    ##memread = memoryAccess(var)
-    # parameters = execute_buffer.pop(0)
-    memoryAccess(execute_buffer.pop(0))
-    ##registerUpdate(var, memread)
-    registerUpdate(memory_buffer.pop(0))
+    var = execute(reg_list)
+    memread = memoryAccess(var)
+    registerUpdate(var, memread)
     return
+
