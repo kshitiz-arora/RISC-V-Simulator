@@ -15,6 +15,7 @@ fetch_buffer= []
 decode_buffer= []
 execute_buffer= []
 memory_buffer= []
+BTB = [] # branch target buffer
 
 #counters
 fetch_counter= -1
@@ -36,6 +37,10 @@ def reset_all():
     global execute_buffer
     global memory_buffer
     global registers_bool
+    global BTB
+
+    BTB = {}
+
     PC = 0x0
 
     decode_buffer= []
@@ -614,7 +619,7 @@ def memoryAccess(parameters):
     [var, variable] = parameters
     # global PC
     global memory
-    global messageram
+    global message
     global memory_buffer
 
     if(variable["rd"]!="" and registers_bool[int("0b"+variable["rd"],2)]==2):

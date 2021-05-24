@@ -375,41 +375,14 @@ def decode(instr):
         operation = 'jal'
         reg_list = []
     
-    if stall:
-        if (variable["rs1"] not in ["", "00000"] and registers_bool[int("0b"+variable["rs1"],2)]==1):
-            to_stall = True
+    if (variable["rs1"] not in ["", "00000"] and registers_bool[int("0b"+variable["rs1"],2)]==1):
+        to_stall = True
+        if stall:
             return True, variable["rs1"]
-        if (variable["rs2"] not in ["", "00000"] and registers_bool[int("0b"+variable["rs2"],2)]==1):
-            to_stall = True, variable["rs2"]
+    if (variable["rs2"] not in ["", "00000"] and registers_bool[int("0b"+variable["rs2"],2)]==1):
+        to_stall = True, variable["rs2"]
+        if stall:
             return True, variable["rs2"]
-
-
-    # if forward:
-    #     if (variable["rs1"] not in ["", "0"] and registers_bool[int("0b"+variable["rs1"],2)]==1):
-
-
-    # #check for data hazard in rs1 and rs2
-    # rs1 = -1
-    # rs2 = -1
-    # if forward:
-    #     if(variable["rs1"] not in ["", "0"] and  registers_bool[int("0b"+variable["rs1"],2)] ==1):
-
-    #         if (execute_buffer[1]["rd"] == variable["rs1"]):
-    #             rs1 = execute_buffer[0]
-            
-    #         elif (memory_buffer[2]["rd"] == variable["rs1"]):
-    #             rs1 = memory_buffer[0]
-        
-    #     if(variable["rs2"] not in ["", "0"] and  registers_bool[int("0b"+variable["rs2"],2)] ==1):
-
-    #         if (execute_buffer[1]["rd"] == variable["rs2"]):
-    #             rs2 = execute_buffer[0]
-            
-    #         elif (memory_buffer[2]["rd"] == variable["rs2"]):
-    #             rs2 = memory_buffer[0]
-    
-    
-
 
     if(variable["rd"] not in ["", "00000"]):
         # registers_bool[int("0b"+variable["rd"],2)]=3
@@ -417,6 +390,23 @@ def decode(instr):
         
     variable['instr_type'] = instr_type
     variable['operation'] = operation
+
+    #check for data hazard in rs1 and rs2
+    if(data_frwd ==1):
+        # E to E
+        if(variable["rs1"]!="" and  registers_bool[int("0b"+variable["rs1"],2)] ==2):
+            variable["rs1"]= execute_buffer[0][1]["rd"]
+        if(variable["rs2"]!="" and  registers_bool[int("0b"+variable["rs2"],2)] ==2):
+            variable["rs2"]= execute_buffer[0][1]["rd"]
+        # M to E
+        if(variable["rs1"]!="" and registers_bool[int("0b"+variable["rs1"],2)] ==1):
+             variable["rs1"]= memory_buffer[0][2]["rd"]
+        if(variable["rs2"]!="" and registers_bool[int("0b"+variable["rs2"],2)] ==1):
+             variable["rs2"]= memory_buffer[0][2]["rd"]
+
+        # M to M ------------------
+
+
 
     message[1] = "\nDECODE:          \nIntruction Type - " + instr_type + "    \nOperation - " + operation + "    \nRegister values are read."
     
@@ -465,38 +455,6 @@ def executeR(reg_list, variable):
 
     op1 = reg_list[0]
     op2 = reg_list[1]
-
-    #check for data hazard in rs1 and rs2
-    rs1 = -1
-    rs2 = -1
-    if forward:
-        if(variable["rs1"] not in ["", "0"] and  registers_bool[int("0b"+variable["rs1"],2)] ==1):
-
-            if (execute_buffer[0][1]["rd"] == variable["rs1"]):
-                if (execute_buffer[0][1]["operation"] not in ["lw", "lh", "lb"]):
-                    rs1 = execute_buffer[0][0]
-                    op1 = rs1
-            
-            elif (memory_buffer[0][2]["rd"] == variable["rs1"]):
-                if (execute_buffer[1]["operation"] not in ["lw", "lh", "lb"]):
-                    rs1 = memory_buffer[0][0]
-                else:
-                    rs1 = memory_buffer[0][1]
-                op1 = rs1
-        
-        if(variable["rs2"] not in ["", "0"] and  registers_bool[int("0b"+variable["rs2"],2)] ==1):
-
-            if (execute_buffer[0][1]["rd"] == variable["rs2"]):
-                if (execute_buffer[0][1]["operation"] not in ["lw", "lh", "lb"]):
-                    rs2 = execute_buffer[0][0]
-                    op2 = rs2
-            
-            elif (memory_buffer[0][2]["rd"] == variable["rs2"]):
-                if (execute_buffer[0][1]["operation"] not in ["lw", "lh", "lb"]):
-                    rs2 = memory_buffer[0][0]
-                else:
-                    rs2 = memory_buffer[0][1]
-                op2 = rs2
 
     val = 0
 
@@ -572,39 +530,6 @@ def executeSB(reg_list, variable):  # rs1, rs2, imm
     op1 = reg_list[0]
     op2 = reg_list[1]
 
-    #check for data hazard in rs1 and rs2
-    rs1 = -1
-    rs2 = -1
-    if forward:
-        if(variable["rs1"] not in ["", "0"] and  registers_bool[int("0b"+variable["rs1"],2)] ==1):
-
-            if (execute_buffer[0][1]["rd"] == variable["rs1"]):
-                if (execute_buffer[0][1]["operation"] not in ["lw", "lh", "lb"]):
-                    rs1 = execute_buffer[0][0]
-                    op1 = rs1
-            
-            elif (memory_buffer[0][2]["rd"] == variable["rs1"]):
-                if (execute_buffer[1]["operation"] not in ["lw", "lh", "lb"]):
-                    rs1 = memory_buffer[0][0]
-                else:
-                    rs1 = memory_buffer[0][1]
-                op1 = rs1
-        
-        if(variable["rs2"] not in ["", "0"] and  registers_bool[int("0b"+variable["rs2"],2)] ==1):
-
-            if (execute_buffer[0][1]["rd"] == variable["rs2"]):
-                if (execute_buffer[0][1]["operation"] not in ["lw", "lh", "lb"]):
-                    rs2 = execute_buffer[0][0]
-                    op2 = rs2
-            
-            elif (memory_buffer[0][2]["rd"] == variable["rs2"]):
-                if (execute_buffer[0][1]["operation"] not in ["lw", "lh", "lb"]):
-                    rs2 = memory_buffer[0][0]
-                else:
-                    rs2 = memory_buffer[0][1]
-                op2 = rs2
-    
-
     if(operation == "beq"):
         if(op1 == op2):
             PC_temp[execute_counter] = imm+PC[execute_counter]
@@ -642,26 +567,6 @@ def executeI(reg_list, variable):  # rd rs1 imm
     operation = variable['operation']
     op1 = reg_list[0]
     op2 = get_signed(variable['imm'])
-
-    #check for data hazard in rs1 and rs2
-    rs1 = -1
-    rs2 = -1
-    if forward:
-        if(variable["rs1"] not in ["", "0"] and  registers_bool[int("0b"+variable["rs1"],2)] ==1):
-
-            if (execute_buffer[0][1]["rd"] == variable["rs1"]):
-                if (execute_buffer[0][1]["operation"] not in ["lw", "lh", "lb"]):
-                    rs1 = execute_buffer[0]
-                    op1 = rs1
-            
-            elif (memory_buffer[0][2]["rd"] == variable["rs1"]):
-                if (execute_buffer[1]["operation"] not in ["lw", "lh", "lb"]):
-                    rs1 = memory_buffer[0]
-                else:
-                    rs1 = memory_buffer[1]
-                op1 = rs1
-        
-        
     ans = 0
     if (operation == 'addi'):
         ans = op1 + op2
@@ -744,24 +649,17 @@ def memoryAccess(parameters):
     operation = variable['operation']
     instr_type = variable['instr_type']
     memread = ""
-    
+    # (instr_type == 'R') NO ACTION
     if (instr_type == 'S'):
         message[3] = '\nMEMORY ACCESS:   \nMemory at ' + hex(var) + ' is updated.'
-
-        registerValue = registers[get_signed(variable['rs2'])]
-
-        # M to M
-        if (memory_buffer[0][2]["operation"] in ["lw", "lh", "lb"]): # prev instr
-            if (variable["rs2"] == memory_buffer[0][2]["rd"]):
-                registerValue = memory_buffer[0][1]
-
         if (operation == 'sb'):
-            memory[var] = memory.get(var, '00000000')[:6] + registerValue[-2:]
+            memory[var] = memory.get(var, '00000000')[
+                :6] + registers[get_signed(variable['rs2'])][-2:]
         elif (operation == 'sh'):
-            memory[var] = memory.get(var, '00000000')[:4] + registerValue[-4:]
+            memory[var] = memory.get(var, '00000000')[
+                :4] + registers[get_signed(variable['rs2'])][-4:]
         elif (operation == 'sw'):
-            memory[var] = registerValue[-8:]
-    
+            memory[var] = registers[get_signed(variable['rs2'])][-8:]
     elif (instr_type == 'I'):
         message[3] = '\nMEMORY ACCESS:   \nData at ' + hex(var) + ' is accessed.'
         if (operation == 'lb'):
@@ -770,7 +668,6 @@ def memoryAccess(parameters):
             memread = '0x' + sign_extend_hex(memory.get(var, '00000000')[-4:])
         elif (operation == 'lw'):
             memread = '0x' + sign_extend_hex(memory.get(var, '00000000')[-8:])
-    
     else:
         message[3] = '\nMEMORY ACCESS:   \nNo Action'
 
@@ -846,12 +743,6 @@ def data_forwarding():
 
 
 def main1():
-
-    global forward
-    forward = True
-    global stall
-    stall = False
-
     global PC
     global register_counter
     global memory_counter
@@ -864,6 +755,8 @@ def main1():
     f = 0
 
     to_stall = False
+    newInst = True
+    maxInst = float("inf")
 
     while(1):
         #fetch()
@@ -874,65 +767,64 @@ def main1():
             fetch_counter = -2
             # break
 
+        flag = not (stall==True)&(to_stall==True)
         
-        
-        if(register_counter>=0 ):
-            PC[register_counter] = register_counter
-            registerUpdate(memory_buffer[0])
-
-        if(memory_counter>=0 ):
-            PC[memory_counter] = memory_counter
-            memoryAccess(execute_buffer[0])
-
-        if(execute_counter>=0 ):
-            PC[execute_counter] = execute_counter
-            execute(decode_buffer[0])
+        if(fetch_counter>=0 and f!=-2 and flag):
+            PC[fetch_counter] = fetch_counter
+            fetch(fetch_counter)
+            
 
         if(decode_counter>=0):
             PC[decode_counter] = decode_counter
             if stall:
                 to_stall, reg = decode(fetch_buffer[0])
-                if to_stall:
-
-                    if(register_counter>=0 ):
-                        memory_buffer.pop(0)
-                    if(memory_counter>=0 ):
-                        execute_buffer.pop(0)
-                    if(execute_counter>=0 ):
-                        decode_buffer.pop(0)
-
-                    register_counter = memory_counter
-                    memory_counter = execute_counter
-                    execute_counter = -4
-                    if (memory_counter >= 0): # for jump instructions
-                        if (PC[memory_counter] != memory_counter+4):
-                            # flush
-                            decode_counter = -4
-                            execute_counter = -8
-                            fetch_buffer.pop(0)
-                            decode_buffer.pop(0)
-                            fetch_counter = PC[memory_counter]
-                    continue
+                # if to_stall:
+                #     register_counter = memory_counter
+                #     memory_counter = execute_counter
+                #     execute_counter = -4
+                #     if (memory_counter >= 0): # for jump instructions
+                #         if (PC[memory_counter] != memory_counter+4):
+                #             # flush
+                #             decode_counter = -4
+                #             execute_counter = -8
+                #             fetch_buffer.pop(0)
+                #             decode_buffer.pop(0)
+                #             fetch_counter = PC[memory_counter]
+                #     # continue
+                if not to_stall:
+                    fetch_buffer.pop(0)
             else:
                 to_stall, reg = decode(fetch_buffer[0])
-            
+                fetch_buffer.pop(0)
 
-        if(fetch_counter>=0 and f!=-2):
-            PC[fetch_counter] = fetch_counter
-            fetch(fetch_counter)
+        if(execute_counter>=0 ):
+            PC[execute_counter] = execute_counter
+            execute(decode_buffer.pop(0))
+
+        if(memory_counter>=0 ):
+            PC[memory_counter] = memory_counter
+            memoryAccess(execute_buffer.pop(0))
 
         if(register_counter>=0 ):
-           memory_buffer.pop(0)
-        if(memory_counter>=0 ):
-           execute_buffer.pop(0)
-        if(execute_counter>=0 ):
-           decode_buffer.pop(0)
-        if(decode_counter>=0):
-            fetch_buffer.pop(0)
+            PC[register_counter] = register_counter
+            registerUpdate(memory_buffer.pop(0))
 
         if (register_counter == -2):
             break
 
+        if (stall and to_stall):
+            register_counter = memory_counter
+            memory_counter = execute_counter
+            execute_counter = -4
+            if (memory_counter >= 0): # for jump instructions
+                if (PC[memory_counter] != memory_counter+4):
+                    # flush
+                    decode_counter = -4
+                    execute_counter = -8
+                    fetch_buffer.pop(0)
+                    decode_buffer.pop(0)
+                    fetch_counter = PC[memory_counter]
+            continue
 
         # if(execute_counter < 0 ):   ## do only if execute operation is not performed
         #     PC= PC +4
