@@ -1,0 +1,10 @@
+Total number of cycles:  134
+Total instructions executed:  62
+CPI:  2.161290322580645
+Number of Data-transfer (load and store) instructions executed:  2
+Number of ALU instructions executed:  38
+Number of Control instructions executed:  24
+Number of stalls/bubbles in the pipeline:  45
+Number of data hazards:  0
+number of mispredictions:  24
+{0: '0x00000000', 1: '0x00000058', 2: '0x7fffffe8', 3: '0x10000000', 4: '0x00000000', 5: '0x0000000b', 6: '0x00000037', 7: '0x00000059', 8: '0x0000000b', 9: '0x00000000', 10: '0x00000000', 11: '0x00000000', 12: '0x00000000', 13: '0x00000000', 14: '0x00000000', 15: '0x00000000', 16: '0x00000000', 17: '0x00000000', 18: '0x00000000', 19: '0x00000000', 20: '0x00000000', 21: '0x00000000', 22: '0x00000000', 23: '0x00000000', 24: '0x00000000', 25: '0x00000000', 26: '0x00000000', 27: '0x00000000', 28: '0x00000000', 29: '0x00000000', 30: '0x00000000', 31: '0x00000000'}

@@ -1,0 +1,26 @@
+Total number of cycles:  13
+Total instructions executed:  6
+CPI:  2.1666666666666665
+Number of Data-transfer (load and store) instructions executed:  2
+Number of ALU instructions executed:  5
+Number of Control instructions executed:  0
+Number of stalls/bubbles in the pipeline:  3
+Number of data hazards:  0
+Number of control hazards:  0
+number of mispredictions:  0
+number of stalls due to control hazards:  0
+number of stalls due to data hazards:  3
+{0: '0x00000000', 1: '0x00000000', 2: '0x7FFFFFF0', 3: '0x10000000', 4: '0x10000000', 5: '0x00000005', 6: '0x00000005', 7: '0x00000000', 8: '0x00000000', 9: '0x00000000', 10: '0x00000000', 11: '0x00000000', 12: '0x00000000', 13: '0x00000000', 14: '0x00000000', 15: '0x00000000', 16: '0x00000000', 17: '0x00000000', 18: '0x00000000', 19: '0x00000000', 20: '0x00000000', 21: '0x00000000', 22: '0x00000000', 23: '0x00000000', 24: '0x00000000', 25: '0x00000000', 26: '0x00000000', 27: '0x00000000', 28: '0x00000000', 29: '0x00000000', 30: '0x00000000', 31: '0x00000000'}
+Total number of cycles:  13
+Total instructions executed:  8
+CPI:  1.625
+Number of Data-transfer (load and store) instructions executed:  2
+Number of ALU instructions executed:  5
+Number of Control instructions executed:  0
+Number of stalls/bubbles in the pipeline:  3
+Number of data hazards:  0
+Number of control hazards:  0
+number of mispredictions:  0
+number of stalls due to control hazards:  0
+number of stalls due to data hazards:  3
+{0: '0x00000000', 1: '0x00000000', 2: '0x7FFFFFF0', 3: '0x10000000', 4: '0x10000000', 5: '0x00000005', 6: '0x00000005', 7: '0x00000000', 8: '0x00000000', 9: '0x00000000', 10: '0x00000000', 11: '0x00000000', 12: '0x00000000', 13: '0x00000000', 14: '0x00000000', 15: '0x00000000', 16: '0x00000000', 17: '0x00000000', 18: '0x00000000', 19: '0x00000000', 20: '0x00000000', 21: '0x00000000', 22: '0x00000000', 23: '0x00000000', 24: '0x00000000', 25: '0x00000000', 26: '0x00000000', 27: '0x00000000', 28: '0x00000000', 29: '0x00000000', 30: '0x00000000', 31: '0x00000000'}
